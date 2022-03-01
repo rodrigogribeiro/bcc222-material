@@ -1,0 +1,439 @@
+#+OPTIONS: num:nil toc:nil
+#+OPTIONS: date:nil reveal_mathjax:t
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Aula01.hs
+#+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title: Programação Funcional
+#+Author: Apresentação da disciplina
+
+* O que é Programação Funcional?
+
+** Programação funcional
+
+- Essencialmente, uma maneira de pensar sobre como resolver problemas
+
+- Definir o que algo *É* ao invés de *COMO* ele é computado.
+
+** Programação funcional
+
+- Para entender melhor a diferença entre *É* e *COMO*, vamos considerar
+  um exemplo.  
+
+** Exemplo
+
+- Somar os /n/ primeiros inteiros (C):
+
+#+begin_src C :tangle no :exports code :includes <stdio.h> :var n=10 :results output
+  int sum = 0;
+  for (int i = 0 ; i <= n ; i++)
+      sum += i;
+  printf("Soma: %d" , sum);
+#+end_src
+
+** Exemplo
+
+- O código anterior mostra *COMO* a máquina deve somar os /n/
+  primeiros inteiros.
+  
+** Exemplo 
+
+- Somar os /n/ primeiros inteiros em Haskell.
+
+#+begin_src haskell :tangle yes :exports code :results output
+  module Aula01 where
+  
+  sumUpTo :: Int -> Int
+  sumUpTo 0 = 0
+  sumUpTo n = n + sumUpTo (n - 1)
+#+end_src
+
+** Exemplo
+
+- O código anterior mostra o que *É* a soma dos /n/ primeiros inteiros.
+
+- A soma consiste em \(n + (n - 1) + ... + 1 + 0\)
+
+** Exemplo
+
+- Executando
+
+#+begin_src  haskell
+  sumUpTo 10
+#+end_src
+
+* Objetivos
+
+** Objetivos
+
+- Ensinar técnicas de programação funcional:
+  - Usar funções de ordem superior.
+  - Separar /efeitos colaterais/.
+  - Raciocínio sobre programas.
+  - Uso de tipos
+
+** Objetivos
+
+- Essas técnicas podem ser aplicadas em /quase/ toda linguagem de programação.
+  - Nem toda linguagem é fortemente tipada...
+  - Nem toda linguagem permite usar funções de ordem superior...
+
+* Por que programação funcional?  
+
+** Por que?
+
+- Motivos principais para programação funcional estar ganhando atenção:
+
+  - Ausência de efeitos colaterais ocasionam menos bugs e facilitam teste.
+
+  - Facilidade de manutenção.
+
+** Menos bugs
+
+- Ausência de efeitos colaterais $\Rightarrow$ menos surpresas.
+   - Funções não manipulam um estado global.
+
+** Menos bugs
+
+- Ausência de efeitos colaterais facilita o /raciciocínio/ sobre programas.
+  - Raciocínio sobre OO $\Rightarrow$ curso de pós.
+  - Raciocínio sobre PF $\Rightarrow$ este curso.
+
+** Menos bugs
+
+- Funções de ordem superior para /abstrair/ padrões.
+  - Polimorfismo evita a repetição de código.
+  - Código mais geral facilita o reuso.
+
+** Manutenção
+
+- Tipos são documentação /verificada/ pelo compilador.
+
+- Facilitam tarefas de /refatoração/.
+  - Mude uma definição e o compilador mostra todos os pontos onde o código deve ser alterado.
+
+** Quem usa linguagens funcionais?
+
+- Facebook (software anti-spam escrito em Haskell)
+- Nubank usa /Clojure/ para o desenvolvimento de seus produtos.
+- Frameworks Javascript são implementados usando técnicas de programação funcional.
+
+* Ementa
+
+** Ementa
+
+- A linguagem Haskell.
+- Tipos algébricos e funções de ordem superior.
+- Polimorfismo paramétrico e de sobrecarga.
+
+** Ementa
+
+- Mônadas e parsing.
+- Tipos dependentes e correção de programas.
+
+
+* Bibliografia
+
+** Bibliografia
+
+- [[http://learnyouahaskell.com/chapters][Learn you a Haskell for great good!]]
+
+- [[http://book.realworldhaskell.org/read/][Real world Haskell]]
+
+- [[https://plfa.github.io/][Programming languages foundations in Agda]]
+
+** Materiais adicionais
+
+- Slides e código exemplo serão disponibilizados no seguinte [[https://github.com/rodrigogribeiro/bcc222-material][repositório]].
+
+* Software
+
+** Software necessário
+
+- [[https://docs.haskellstack.org/en/stable/README/][Haskell tool stack]]
+
+- [[https://wiki.portal.chalmers.se/agda/pmwiki.php][Agda programming language]]
+
+- Editor de texto
+  - VSCode
+  - Emacs
+
+* Critérios de Avaliação
+
+** Avaliações
+
+- 3 avaliações no valor de 10,0 pontos.
+
+- Nota final: média aritmética simples das 3 avaliações.
+
+** Avaliações
+
+- Data avaliação 1: 13/04/2022
+- Data avaliação 2: 11/05/2022
+- Data avaliação 3: 15/06/2022
+- Data exame especial: 20/06/2022
+
+** Exame especial
+
+- Mínimo de 75% de frequência e nota inferior a 6,0.
+
+- Exame especial parcial para alunos que perderam uma avaliação.
+
+- Detalhes: Resolução CEPE 2880 de 05/2006
+
+** Frequência
+
+- Chamadas são feitas no início da aula.
+
+- Caso chegue atrasado, me procure ao fim da aula para que eu marque sua frequência.
+
+* Outras informações
+
+** Informações
+
+- Toda informação da disciplina será disponibilizada na plataforma Moodle.
+
+- Email: rodrigo.ribeiro@ufop.edu.br
+
+** Atendimento
+
+- O atendimento será feito utilizando a ferramenta [[https://zulip.com/][Zulip]]. Será criado um
+  workspace para a disciplina e todos os alunos matriculados serão adicionados.
+
+- Utilize o Zulip para o envio de dúvidas sobre o conteúdo da disciplina
+
+** Atendimento
+
+- Atendimento usando Google Meet será feito às quartas-feiras de 16:00h às 17:00h
+  utilizando o seguinte [[][link]].
+
+** Finalizando
+
+- Tenhamos todos um excelente semestre de trabalho!
+
+* Introdução a Haskell
+
+** Características
+
+- *Recursão* ao invés de iteração.
+  
+- Casamento de padrão (muitas linguagens modernas possui suporte, como Rust).
+
+** Características
+
+- Expressões são o elemento central na linguagem.
+
+- Linguagens imperativas (C/C++, Java, Python) a unidade básica é o comando.
+
+** Características
+
+- Funções são cidadãos de primeira classe.
+  - Podem ser passadas como argumento para outras funções.
+  - Podem ser retornadas como resultado de outras funções.
+  - Podem ser criadas localmente (funções anônimas).
+
+** Recursão
+
+- *Iteração*: repetir um processo um certo número de vezes.
+
+#+begin_src C :tangle no :exports code :includes <stdio.h> :var n=5 :results output
+  int factorial = 1;
+  for (int i = 1 ; i <= n ; i++)
+      factorial *= i;
+  printf("Fatorial: %d" , sum);
+#+end_src
+
+
+** Recursão
+
+- *Recursão*: definir algo em termos de si próprio.
+
+#+begin_src haskell :tangle yes :exports code :results output
+  factorial :: Int -> Int
+  factorial 0 = 1
+  factorial n = n * factorial (n - 1)
+#+end_src
+
+** Casamento de padrão
+
+- Funções são definidas por uma sequência de *equações*.
+  - Argumentos são comparados com o lado esquerdo até que um dos lados "/case/".
+- Na definição de ~fatorial~ ...
+  - Se o argumento for 0, o valor retornado é 0.
+  - Caso contrário, a variável /n/ /casa/ com o valor do argumento e esse é substituído
+    no lado direito da equação.
+
+** Casamento de padrão
+
+- Na lousa: execução de ~fatorial 5~.
+
+** Expressões
+
+- Em linguagens imperativas, *comandos* manipulam o *estado* do programa.
+  - Estado: variáveis visíveis em um dado ponto do código.
+  - Comandos são executados sequencialmente.
+  - Variáveis dão nome a uma parte do estado do programa.
+
+** Expressões
+
+- Expressões representam um *valor* que depende apenas de sub-expressões.
+
+- Isso facilita a composição e raciciocínio sobre programas.
+
+** Pergunta
+
+- Considere a função a seguir
+
+#+begin_src haskell :tangle yes :exports code :results output
+  fact :: Int -> Int
+  fact n = n * factorial (n - 1)
+  fact 0 = 1
+#+end_src
+
+- Qual o resultado de ~fact 3~?
+
+** Funções como CPC
+
+- *Funções*: Associam argumentos a resultados.
+  - Funções podem ser parâmetros de outras funções.
+  - Funções podem ser retornadas como resultado.
+
+#+begin_src haskell :tangle yes :exports code :results output
+  greet :: String -> String
+  greet name = "Hello, " ++ name ++ "!"
+#+end_src
+
+** Funções como CPC
+
+- Exemplos.
+  - A função ~map~ aplica uma função a cada elemento de uma lista.
+
+#+begin_src haskell :exports code :results output
+  map greet ["Carlos", "Pedro"]
+#+end_src
+
+** Exemplo
+
+- Construa uma versão de ~greet~ que receba dois argumentos.
+  - A versão anterior possui apenas um argumentos.
+
+* Por que Haskell?
+
+** Por que Haskell?
+
+- Haskell pode ser definido por
+  - Funcional
+  - Estaticamente tipada
+  - Pura
+  - Lazy (avaliação sob demanda)
+
+** Estaticamente tipada
+
+- Toda expressão e função possui um *tipo*.
+- O compilador *evita* combinações erradas.
+  - Não é possível executar ~hello True~.
+
+#+begin_src haskell :tangle yes :exports code :results output
+  hello name = "Hello, " ++ name ++ "!"
+#+end_src
+
+** Estaticamente tipada
+
+- Mas é necessário anotar tipos em todas as definições?
+  - Anotar tipos é uma boa prática.
+  - Mas o compilador de Haskell é capaz de /inferir/ o tipo da expressão.
+
+** Pura
+
+- Em Haskell, variáveis não podem ter valores modificados.
+  - Variáveis apenas dão nome a valores.
+
+- Efeitos colaterais são identificadas por seu tipo.
+  - Exemplo: toda função que faz I/O possui o tipo ~IO~.
+
+#+begin_src haskell :tangle no :exports code
+readFile :: FilePath -> IO String
+#+end_src
+
+** Avaliação Lazy
+
+- Tópico futuro da disciplina...
+
+** Por que Haskell?
+
+- Do ponto de vista pedagógico:
+  - Haskell força o uso de programação funcional.
+
+** Por que Haskell?
+ 
+- Haskell possui um sistema de tipos expressivo.
+  - Compilador é capaz de encontrar /bugs/ antes de executar o código.
+  - Usando tipos, podemos expressar invariantes sobre o código
+   
+* Executando
+
+** Haskell stack
+
+- Vamos utilizar o gerenciador de projetos Haskell stack.
+
+- Automaticamente instala bibliotecas e a versão adequada do compilador GHC.
+
+** Interpretador
+
+- Inicialmente, vamos utilizar o interpretador de Haskell, o =ghci=.
+  - Execução interativa: expressões são avaliadas imediatamente.
+  - Útil para testes rápidos.
+  - Podemos carregar um arquivo no interpretador e testar suas funções.
+
+** Interpretador
+
+- Comandos básicos
+  - =:q= - Finaliza a execução do interpretador.
+  - =:t <expr>= - Infere o tipo de =<expr>=
+  - =:l <arquivo.hs>= - Carrega o código de <arquivo.hs> no interpretador.
+  - =:r= - Recarrega o código no intepretador (útil após modificar um arquivo).
+    
+** Interpretador
+
+- Exemplos
+
+#+begin_src haskell :exports code :results output
+  length [1,2,3]
+#+end_src
+
+#+begin_src haskell :exports code :results output
+  sum [1 .. 10]
+#+end_src
+
+#+begin_src haskell :exports code :results output
+  reverse [1 .. 10]
+#+end_src
+
+** Interpretador
+
+- Parentesis servem para separar subexpressões.
+  - ~sum (replicate 3 1)~: um argumento para ~sum~.
+  - ~sum replicate 3 1~: três argumentos para ~sum~.
+- O primeiro exemplo é aceito, o segundo é um erro de tipo pois ~sum~ recebe somente um argumento.
+
+* Exercícios
+
+** Exercícios
+
+- Instale o Haskell stack e configure um editor de texto de sua preferência.
+
+- Execute algumas das funções apresentadas nesta aula.
+
+** Exercícios
+
+- Defina uma função que calcule o /n/-ésimo termo da sequência de Fibonacci.
+
+\begin{array}{lcl}
+  F(0) & = & 0\\
+  F(1) & = & 1\\
+  F(n) & = & F(n - 1) + F(n - 2)\\
+\end{array}
