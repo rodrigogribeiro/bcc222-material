@@ -109,3 +109,11 @@ A -> B
   sum3 :: Int -> Int -> Int -> Int
   sum3 x y z = x + y + z
 #+end_src
+
+* Listas
+
+** Listas
+
+- Estrutura de dados fundamental em programação funcional.
+
+- 
