@@ -262,11 +262,14 @@
 
 - Funções são definidas por uma sequência de *equações*.
   - Argumentos são comparados com o lado esquerdo até que um dos lados "/case/".
+
+** Casamento de padrão
+
 - Na definição de ~fatorial~ ...
   - Se o argumento for 0, o valor retornado é 0.
   - Caso contrário, a variável /n/ /casa/ com o valor do argumento e esse é substituído
     no lado direito da equação.
-
+ 
 ** Casamento de padrão
 
 - Na lousa: execução de ~fatorial 5~.

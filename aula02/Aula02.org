@@ -1,0 +1,111 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Aula02.hs
+#+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title: Programação Funcional
+#+Author: Definindo funções simples
+
+
+* Objetivos
+
+** Objetivos
+
+- Definir funções em Haskell
+  - Definições locais.
+  - Guardas e casamento de padrão.
+
+** Objetivos
+
+- Utilizar listas e tuplas.
+
+- Sintaxe baseada em layout e comentários.
+
+** Objetivos
+
+- Noções sobre tipos em Haskell
+  - Conceitos sobre polimorfismo.
+
+* Definindo funções
+
+** Definindo funções
+
+#+begin_src haskell :tangle yes :exports code :results output
+  module Aula02 where
+
+  average vs = sum vs `div` length ns
+#+end_src
+
+** Definindo funções
+
+- Nomes de funções e argumentos em letras minúsculas.
+- Função ~average~ é definida por uma *equação*.
+- Chamada de função não usa parêntesis.
+  - ~div~ é utilizado como um operador.
+ 
+#+begin_example
+  average vs = sum vs `div` length ns
+#+end_example
+
+** Definindo funções
+
+- Definimos a função ~average~ sem especificar seu tipo.
+
+- O compilador de Haskell é capaz de inferí-lo.
+  - Porém, tenha em mente que o compilador sempre calculará o tipo /mais geral/
+  - Mais geral = mais polimórfico.
+
+** Definindo funções
+
+- Ao invés de confiar no processo de inferência, podemos anotar qual o tipo da função.
+
+** Definindo funções
+
+- Qual seria um tipo razoável para ~average~?
+  - Observando a função, vemos que rela recebe um argumento (~ns~).
+
+#+begin_example
+  average vs = sum vs `div` length ns
+#+end_example
+
+** Definindo funções
+
+- Tipos de funções são representados em Haskell da seguinte forma:
+
+#+begin_example
+A -> B
+#+end_example
+
+- ~A~ é o tipo(s) dos argumentos.
+- ~B~ é o tipo do resultado.
+
+** Definindo funções
+
+- Exemplo
+
+#+begin_src haskell :tangle yes :exports code :results output
+  add1 :: Int -> Int
+  add1 x = x + 1
+#+end_src
+
+** Definindo funções
+
+- Exemplo: função com dois argumentos.
+
+#+begin_src haskell :tangle yes :exports code :results output
+  median :: Float -> Float -> Float
+  median x y = (x + y) / 2
+#+end_src
+
+** Definindo funções
+
+- Exemplo: Defina uma função que receba 3 números inteiros e retorne seu produto.
+
+#+begin_src haskell :tangle yes :exports code :results output
+  sum3 :: Int -> Int -> Int -> Int
+  sum3 x y z = x + y + z
+#+end_src
