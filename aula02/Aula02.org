@@ -35,9 +35,12 @@
 ** Definindo funções
 
 #+begin_src haskell :tangle yes :exports code :results output
-  module Aula02 where
+module Aula02 where
+import Prelude hiding ( replicate
+                      , null
+                      )
 
-  average vs = sum vs `div` length ns
+average vs = sum vs `div` length ns
 #+end_src
 
 ** Definindo funções
@@ -48,7 +51,7 @@
   - ~div~ é utilizado como um operador.
  
 #+begin_example
-  average vs = sum vs `div` length ns
+average vs = sum vs `div` length ns
 #+end_example
 
 ** Definindo funções
@@ -69,7 +72,7 @@
   - Observando a função, vemos que rela recebe um argumento (~ns~).
 
 #+begin_example
-  average vs = sum vs `div` length ns
+average vs = sum vs `div` length ns
 #+end_example
 
 ** Definindo funções
@@ -88,8 +91,8 @@ A -> B
 - Exemplo
 
 #+begin_src haskell :tangle yes :exports code :results output
-  add1 :: Int -> Int
-  add1 x = x + 1
+add1 :: Int -> Int
+add1 x = x + 1
 #+end_src
 
 ** Definindo funções
@@ -97,8 +100,8 @@ A -> B
 - Exemplo: função com dois argumentos.
 
 #+begin_src haskell :tangle yes :exports code :results output
-  median :: Float -> Float -> Float
-  median x y = (x + y) / 2
+median :: Float -> Float -> Float
+median x y = (x + y) / 2
 #+end_src
 
 ** Definindo funções
@@ -106,8 +109,8 @@ A -> B
 - Exemplo: Defina uma função que receba 3 números inteiros e retorne seu produto.
 
 #+begin_src haskell :tangle yes :exports code :results output
-  sum3 :: Int -> Int -> Int -> Int
-  sum3 x y z = x + y + z
+sum3 :: Int -> Int -> Int -> Int
+sum3 x y z = x + y + z
 #+end_src
 
 * Listas
@@ -115,5 +118,393 @@ A -> B
 ** Listas
 
 - Estrutura de dados fundamental em programação funcional.
+- Listas possuem dois padrões básicos
+  - ~[]~ denota a lista vazia.
+  - ~x : xs~ denota a lista com cabeça ~x~ e cauda ~xs~.
 
-- 
+** Listas
+
+- Listas são tão comuns em Haskell que a linguagem possui sintaxe especial para representá-las.
+- Exemplos
+  - ~1 : (2 : (3 : []))~ pode ser escrita como ~[1,2,3]~.
+
+** Listas
+
+- Exemplos
+
+#+begin_src haskell :tangle no :exports none :results output
+1 : [2]
+#+end_src
+
+#+begin_src haskell :tangle no :exports none :results output
+1 : (2 : [3, 4])
+#+end_src
+
+** Listas
+
+- Como Haskell é uma linguagem fortemente tipadas, listas possuem tipos.
+
+- O tipo ~[a]~ denota listas cujos elementos são do tipo ~a~.
+  - Listas são *polimórficas*.
+  - O ~a~ em ~[a]~ denota uma *variável de tipo*, que são *universalmente* quantificadas. 
+
+** Listas
+
+- Tipos dos construtores de listas
+  - ~[]  :: [a]~
+  - ~(:) :: a -> [a] -> [a]~ 
+
+** Listas
+
+- O tipo do operador ~:~
+
+#+begin_example
+(:) :: a -> [a] -> [a]
+#+end_example
+
+- Entendendo o tipo ~a -> [a] -> [a]~
+  - ~a~: cabeça (primeiro elemento) da lista a ser criada.
+  - ~[a]~: cauda (restante) da lista a ser criada.
+
+** Listas
+
+- Algumas funções sobre listas:
+  - ~null~ testa se uma lista é ou não vazia.
+  - ~head~ retorna o primeiro elemento de uma lista.
+  - ~tail~ retorna a cauda de uma lista.
+
+** Listas
+
+- Exemplos
+
+#+begin_src haskell :tangle no :exports none :results output
+null [1,2,3]
+#+end_src
+
+#+begin_src haskell :tangle no :exports none :results output
+head [1,2,3]
+#+end_src
+
+#+begin_src haskell :tangle no :exports none :results output
+tail [1,2,3]
+#+end_src
+
+** Listas
+
+- Exemplos
+  - ~head~ lança um erro ao ser chamada sobre a lista vazia.
+  - ~tail~ lança um erro ao ser chamada sobre a lista vazia. 
+
+#+begin_src haskell :tangle no :exports none :results output
+head []
+#+end_src
+
+#+begin_src haskell :tangle no :exports none :results output
+tail []
+#+end_src
+
+** Listas
+
+- Qual o tipo destas funções?
+
+** Listas
+
+- A função ~null~ verifica se uma lista é vazia ou não
+  - Argumento: ~[a]~
+  - Resultado: ~Bool~
+
+#+begin_src haskell :tangle no :exports none
+null :: [a] -> Bool
+#+end_src
+
+** Listas
+
+- A função ~head~ retorna o primeiro elemento de uma lista.
+  - Argumento: ~[a]~
+  - Resultado: ~a~
+
+#+begin_src haskell :tangle no :exports none
+head :: [a] -> a
+#+end_src
+
+** Listas
+
+- A função ~tail~ retorna a cauda de uma lista.
+  - Argumento: ~[a]~
+  - Resultado: ~[a]~
+
+#+begin_src haskell :tangle no :exports none
+tail :: [a] -> [a]
+#+end_src
+
+* Tuplas
+
+** Tuplas
+
+- Haskell possui suporte a tuplas: pares, triplas, etc.
+- O tipo de tuplas é ~(a,b)~, em que ~a~ e ~b~ são tipos quaisquer.
+
+** Tuplas
+
+- Funções sobre listas.
+
+#+begin_example
+fst :: (a,b) -> a
+fst (x , _) = x
+
+snd :: (a,b) -> b
+snd (_ , y) = y
+#+end_example
+
+** Tuplas
+
+- Exemplo: distância entre pontos
+
+#+begin_src haskell :tangle yes :exports code :results output
+dist :: (Float, Float) -> (Float, Float) -> Float
+dist (x1,y1) (x2,y2)
+   = sqrt ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
+#+end_src
+
+** Tuplas
+
+- Diferença entre tuplas e listas
+  - Tuplas podem possuir elementos de tipos diferentes.
+  - Listas são sempre homogêneas.
+
+#+begin_example
+(True , "abc", 2) :: (Bool, String, Int)
+#+end_example
+
+* Condicionais
+
+** Condicionais
+
+- Expressões ~if~ devem obrigatoriamente possuir o ~else~.
+  - Tanto o ~then~ quanto o ~else~ devem possuir o mesmo tipo.
+
+#+begin_src haskell :tangle yes :exports code :results output
+abs1 :: Int -> Int
+abs1 n = if n < 0 then (- 1) * n else n
+#+end_src
+
+** Condicionais
+
+- Outro exemplo: ~signal~
+
+#+begin_src haskell :tangle yes :export code :results output
+signal1 :: Int -> Int
+signal1 n = if n < 0 then -1
+            else if n == 0 then 0
+                 else 1
+#+end_src
+
+** Guardas
+
+- Maneira elegante de expressar condicionais
+  - ~otherwise~ é definido como ~True~ e pode ser usado como padrão.
+
+#+begin_src haskell :tangle yes :export code :results output
+abs2 :: Int -> Int
+abs2 n
+  | n < 0 = n * (- 1)
+  | otherwise = n
+
+signal2 :: Int -> Int
+signal2 n
+  | n < 0 = -1
+  | n == 0 = 0
+    | otherwise = 1
+#+end_src
+
+** Condicionais
+
+- O que escolher, guardas ou condicionais?
+  - Guardas favorem a leitura em relação a condicionais.
+
+* Definições Locais
+
+** Definições let
+
+- Permite a definição de variáveis locais *antes* de seu uso.
+
+#+begin_src haskell :tangle yes :exports code :results output
+dist1 :: (Float,Float) -> (Float,Float) -> Float
+dist1 (x1,y1) (x2,y2)
+    = let
+        dx  = x1 - x2
+        dx2 = dx * dx
+        dy  = y1 - y2
+        dy2 = dy * dy
+      in sqrt (dx2 + dy2)
+#+end_src
+
+** Definições where
+
+- Permite a definição de variáveis locais *depois* de seu uso.
+
+#+begin_src haskell :tangle yes :exports code :results output
+dist2 :: (Float,Float) -> (Float,Float) -> Float
+dist2 (x1,y1) (x2,y2)
+  = sqrt (dx2 + dy2)
+    where
+     dx  = x1 - x2
+     dx2 = dx * dx
+     dy  = y1 - y2
+     dy2 = dy * dy
+#+end_src
+
+** Definições locais
+
+- Tanto ~let~ quanto ~where~ atribuem um *nome* a uma expressão.
+- Benefícios
+  - Reduzir repetição de código
+  - Documentação: atribuir nomes significativos a expressões.
+
+** Definições locais
+
+- Você pode ter um número qualquer definições locais a uma equação.
+- Regra de *layout*
+  - Definições devem começar em uma mesma coluna.
+
+* Comentários
+
+** Comentários
+
+- Comentário de uma única linha
+
+#+begin_src haskell :tangle yes :exports code :results output
+-- Euler constant 
+e :: Float
+e = 2.718
+#+end_src
+
+** Comentários
+
+- Comentários de múltiplas linhas
+
+#+begin_src haskell :tangle yes :exports code :results output
+{-
+ Definindo uma lista vazia
+-}
+empty :: [a]
+empty = []
+#+end_src
+
+* Casamento de padrão
+
+** Casamento de padrão
+
+#+begin_src haskell :tangle yes :exports code :results output
+fac :: Int -> Int
+fac 0 = 1
+fac n = n * fac (n - 1)
+#+end_src
+
+- Primeira equação executada quando o argumento é 0.
+- Caso contrário, segunda equação é avaliada.
+
+** Casamento de padrão
+
+- Exemplo: ~replicate n x~
+- Constrói uma lista com ~n~ cópias do valor ~x~.
+
+** Casamento de padrão
+
+- Se ~n~ é 0, retorne a lista vazia.
+- Caso contrário, insira ~x~ à frente da lista contendo ~n - 1~ cópias de x.
+
+** Casamento de padrão
+
+- Definição de ~replicate~.
+  - Se um padrão não é usado, substitua-o por "_"
+
+#+begin_src haskell :tangle yes :exports code :results output
+replicate :: Int -> a -> [a]
+replicate 0 _ = []
+replicate n x = x : replicate (n - 1) x
+#+end_src
+
+** Casamento de padrão
+
+- Definindo a conjunção ("and" lógico)
+
+#+begin_src haskell :tangle yes :exports code :results output
+conj :: Bool -> Bool -> Bool
+conj False False = False
+conj False True  = False
+conj True  False = False 
+conj True  True = True
+#+end_src
+
+** Casamento de padrão
+
+- Simplificando a definição
+
+#+begin_src haskell :tangle yes :exports code :results output
+conj1 :: Bool -> Bool -> Bool
+conj1 True  v = v
+conj1 False _ = False
+#+end_src
+
+** Casamento de padrão
+
+- Padrões sobre listas
+
+#+begin_src haskell :tangle yes :exports code :results output
+null :: [a] -> Bool
+null []      = True
+null (_ : _) = False   
+#+end_src
+
+** Casamento de padrão
+
+- Aninhando padrões
+
+#+begin_src haskell :tangle yes :exports code :results output
+trim :: String -> String
+trim (' '  : s) = trim s
+trim ('\t' : s) = trim s
+trim s = s
+
+bothZero :: (Int,Int) -> Bool
+bothZero (0,0) = True
+bothZero _     = False
+
+sumIfThree :: [Int] -> Int
+sumIfThree (a : b : c : []) = a + b + c
+sumIfThree _                = 0
+#+end_src
+
+** Casamento de padrão
+
+- Considere a seguinte definição
+
+#+begin_example
+size xs
+   | xs == [] = 0
+   | otherwise = 1 + tail xs
+#+end_example
+
+** Casamento de padrão
+
+- Problemas com o código anterior
+  - Nem todo tipo possui igualdade implementada, logo não há garantia que o código acima seja aceito para todos os tipos.
+  - Casamento de padrão é compilado para código mais eficiente que a igualdade, que depende de sobrecarga.
+
+** Casamento de padrão
+
+- Uma definição usando casamento de padrão
+
+#+begin_src haskell :tangle yes :exports code :results output
+size :: [a] -> Int
+size []       = 0
+size (_ : xs) = 1 + size xs
+#+end_src
+
+* Exercícios
+
+** Exercícios 
+- Defina uma função para calcular a função ou-exclusivo (xor).
+- Defina a função ~existsPositive~ que retorna verdadeiro se a lista de números inteiros fornecida como argumento possui pelo menos um elemento maior que 0.
+
