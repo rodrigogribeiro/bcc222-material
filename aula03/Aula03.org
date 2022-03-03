@@ -1,0 +1,501 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Aula03.hs
+#+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title: Programação Funcional
+#+Author: Tipos em Haskell
+
+* Objetivos
+
+** Objetivos
+
+- Apresentar tipos básicos de Haskell
+
+- Apresentar sobre polimorfismo
+  - Paramétrico
+  - Sobrecarga
+
+- Verificação e inferência de tipos em Haskell
+
+* Tipos
+
+** Tipos
+
+- Expressões são o componente básico de programas funcionais.
+
+- Em Haskell, toda expressão possui um tipo.
+
+- Mas o que é um tipo?
+
+
+** Tipos
+
+- Tipo: Coleção de valores que suportam o mesmo conjunto de operações.
+
+- Definimos que uma expressão possui um certo tipo como
+  
+#+begin_src haskell
+expression :: Type
+#+end_src
+
+** Tipos
+
+- Exemplos:
+
+#+begin_src haskell
+True  :: Bool
+'a'   :: Char
+[1,2] :: [Int]
+(1, True) :: (Int, Bool)
+not :: Bool -> Bool
+#+end_src
+
+** Tipos
+
+- Aplicações de função também possuem tipos.
+
+#+begin_src haskell
+1 + 2    :: Int
+not True :: Bool
+#+end_src
+
+** Tipos
+
+- Regra geral para a aplicação de função
+  - Se ~f : A -> B~ e ~x : A~ então ~f x : B~
+
+- Formalmente:
+
+\begin{array}{c}
+\dfrac{f : A \to B\:\:\:\:x :A}{f\:x : B}
+\end{array}
+
+* Tipagem estática
+
+** Tipagem estática
+
+- Haskell não permite a execução de código com erros de tipo.
+    - Isto é, Haskell possui tipagem estática.
+    - Algumas linguagens são /dinamicamente/ tipadas:
+      Ruby, Python, JavaScript, etc...
+
+** Tipagem estática
+
+- Consequência: nenhuma falha em tempo de execução é decorrente de erro de tipos.
+    - Programas Haskell são /type safe/.
+
+- Alguns programas válidos são rejeitados pois não é possível avaliar o código para definir se este é seguro.
+
+#+begin_src haskell
+if True then 1 else  False
+#+end_src
+
+** Tipagem estática
+
+- Regra geral para a aplicação de função
+  - Se ~f : A -> B~ e ~x : A~ então ~f x : B~
+
+** Tipagem estática
+
+- Usando essa regra, podemos deduzir que uma expressão não é válida.
+- Exemplo:
+
+#+begin_src haskell
+not :: Bool -> Bool
+'a' :: Char
+
+not 'a'
+-- Couldn't match expected type
+-- ‘Bool’ with actual type ‘Char’
+#+end_src
+
+** Digressão: parse errors
+
+- O seguinte tipo de erro é recorrente aprendendo Haskell:
+
+#+begin_src haskell
+isZero x = x = 0
+<interactive>:1:14: error:
+    parse error on input ‘=’
+#+end_src
+
+** Digressão parse errors
+
+- **Parse error**: código não segue a sintaxe / identação da linguagem.
+
+- Outro erro comum: Tipos, módulos e classes começam com letras maiúsculas. Variáveis e funções, letras minúsculas.
+
+* Tipos de Haskell
+
+** Tipos básicos
+
+- ~Bool~: Valores lógicos - ~True, False~.
+- ~Char~: caracteres simples - ~'a'~.
+
+** Tipos básicos
+
+- Tipos integrais.
+    - ~Int~: inteiros com precisão limitada (pela máquina).
+    - ~Integer~: inteiros com precisão ilimitada.
+
+** Tipos básicos
+      
+- Tipos de ponto flutuante.
+    - ~Float~: precisão simples.
+    - ~Double~: precisão dupla.
+
+** Tipos compostos
+
+- Listas ~[T]~: sequências homogênas de valores de um tipo ~T~.
+
+** Tipos compostos
+
+- Tuplas de diferentes aridades.
+    - pares ~(T1, T2)~
+    - triplas ~(T1, T2, T3)~
+    - ... até 62 componentes ~(T1, ... , T62)~.
+
+** Tipos compostos
+ 
+- Funções: ~T1 -> T2 -> T3 ... -> R~
+
+** Algumas diferenças
+
+- Lista de tuplas e tuplas de listas:
+
+#+begin_src haskell 
+([1,2],[True]) :: ([Int], [Bool])
+[(1, True),(2, False)] :: [(Int,Bool)]
+#+end_src
+
+** Algumas diferenças
+
+- Funções e pares
+
+#+begin_src haskell
+f :: Int -> Int -> Int
+-- f recebe dois argumentos
+g :: (Int, Int) -> Int
+-- g recebe um argumento,
+-- que é um par
+f 1 2    -- ok
+g (1, 2) -- ok
+g 1 2    -- error...
+#+end_src
+
+** Funções como CPC
+
+#+begin_src haskell
+-- funções como elementos de uma lista
+[(+), (*), (-)] :: [Int -> Int -> Int]
+[(&&), (||)]    :: [Bool -> Bool -> Bool]
+
+-- Elementos devem possuir o mesmo tipo.
+-- [(+), (&&)] -- erro de tipo!
+
+-- funções podem ser passadas e retornadas
+-- como resultados de outras funções
+
+flip :: (a -> b -> c) -> (b -> a -> c)
+#+end_src
+
+* Polimorfismo
+
+** Polimorfismo
+
+- Haskell provê suporte a dois tipos de polimorfismo: paramétrico e sobrecarga.
+
+** Polimorfismo
+
+- *Polimorfismo paramétrico* permite a definição de código que opera da mesma forma sobre valores de tipos diferentes.
+
+** Polimorfismo
+
+- *Polimorfismo de sobrecarga* permite a definição de código que opera de maneira distinta de acordo com o tipo de valores.
+
+
+** Polimorfismo paramétrico
+
+- Funções operam sobre "todos" os tipos.
+
+- Tipos envolvem variáveis: identificadores formados por letras minúsculas.
+
+** Polimorfismo paramétrico
+
+- Exemplos:
+
+#+begin_src haskell
+length :: [a] -> Int
+
+length [1, 2]     -- Ok, a = Int
+length ['a', 'b'] -- Ok, a = Char
+length [True]     -- Ok, a = Bool
+#+end_src
+
+** Polimorfismo paramétrico
+
+- Mais alguns exemplos.
+
+#+begin_src haskell
+null :: [a] -> Bool
+(++) :: [a] -> [a] -> [a] -- concatenação
+reverse :: [a] -> [a]
+#+end_src
+
+** Polimorfismo paramétrico
+
+- **Importante!** Variáveis de tipo devem ser substituídas de maneira uniforme. Exemplo:
+
+#+begin_src haskell 
+[1, 2] ++ [3, 4] -- Ok, a é substituído por Int
+[1, 2] ++ ['a', 'b'] -- Erro!
+#+end_src
+
+** Inferência de tipos
+
+- Processo no qual o compilador é capaz de deduzir o tipo de uma definição.
+
+- Em Haskell, o GHC é capaz de calcular o tipo "mais polimórfico" para qualquer expressão.
+
+** Inferência de tipos
+
+- Exemplo: Determinar o tipo da seguinte função.
+
+#+begin_src haskell
+id x = x
+#+end_src
+
+** Inferência de tipos
+
+- Qual o tipo de ~id~?
+
+#+begin_src haskell
+id x = x
+#+end_src
+
+- É uma função de um argumento.
+  - Logo, seu tipo deve ser ~?1 -> ?2~
+      para tipos ~?1~ e ~?2~.
+
+** Inferência de tipos
+
+- Qual o tipo de ~id~?
+
+#+begin_src haskell
+id x = x
+#+end_src
+
+- É uma função que retorna o seu argumento como resultado.
+    - Logo, temos que ~?1 = ?2~.
+
+** Inferência de tipos
+
+- Não há nenhuma restrição adicional.
+    - Logo, o tipo é ~?1 -> ?1~, que é generalizado para ~a -> a~.
+
+** Inferência de tipos
+
+- Qual o tipo de ~id id~?
+
+- Resolução usando a lousa.
+
+* Listas
+
+** Listas
+
+- Elementos de uma lista devem ser de um mesmo tipo.
+
+- Exemplo:
+
+#+begin_src haskell
+sin :: Float -> Float
+[sin , id] :: [Float -> Float]
+#+end_src
+
+** Listas
+
+- Considere os seguintes tipos.
+
+#+begin_src haskell
+head :: [a] -> a
+length :: [a] -> Int
+#+end_src
+
+** Listas
+
+- A seguintes expressão é válida?
+
+#+begin_src haskell
+[head, length]
+#+end_src
+
+** Listas
+
+- Para ser válida, ambos os elementos devem ter o mesmo tipo.
+
+- Logo, temos que os seguintes tipos devem ser iguais:
+
+#+begin_src haskell
+[?1] -> ?1 = [?2] -> Int
+#+end_src
+
+** Listas
+
+- Note que para a igualdade ~[?1] -> ?1 = [?2] -> Int~ ser verdadeira, temos que ~?1 = ?2~ e ~?1 = Int~.
+
+- Substituindo, chegamos no tipo ~[Int] -> Int~ para ambos os elementos.
+
+* Sobrecarga
+
+** Sobrecarga
+
+- Em Haskell, a adição opera sobre diferentes tipos.
+
+#+begin_src haskell
+1 + 2 -- integers
+
+2.5 + 3.1 -- floating point
+#+end_src
+
+** Sobrecarga
+
+- Mas, a adição não é definida sobre todo tipo.
+
+#+begin_src haskell
+'a' + 'b'
+No instance for (Num Char)
+arising from a use of '+'
+#+end_src
+
+** Sobrecarga
+
+- Não é possível atribuir o seguinte tipo à adição:
+
+#+begin_src haskell
+(+) :: a -> a -> a
+#+end_src
+
+porquê a adição não é definida para todo tipo.
+
+
+** Sobrecarga
+
+- Vamos usar o interpretador de Haskell para descobrir o tipo da adição.
+
+#+begin_src haskell
+(+) :: Num a => a -> a -> a
+#+end_src
+
+- O termo ~Num a~ antes do símbolo ~=>~ é uma **restrição**.
+
+** Sobrecarga
+
+- Restringe ~+~ a tipos que satisfazem essa restrição.
+    - Neste caso, a restrição é que ~a~ deve ser um tipo "numérico".
+- **Num** é uma **classe de tipos**
+    - **Aviso!** Conceito não relacionado a OO.
+
+** Classes de tipos
+
+- De maneira simples, classes de tipo definem um conjunto de operações suportador por certos tipos ditos instâncias desta classe.
+
+** Classes de tipos
+
+- Diversas operações da biblioteca padrão de Haskell utilizam classes de tipos.
+
+** Classes de tipos
+
+- O tópico de classes de tipos será estudado com detalhes quando abordarmos o conceito de sobrecarga.
+
+** Algumas classes básicas
+
+- A classe ~Num~ define uma interface para tipos numéricos.
+    - Operações incluem ~(+), (*)~ e ~abs~.
+    - Tipos que são instâncias desta classe são ~Int, Double, Float, Integer~.
+    - Os tipos ~Bool~, ~Char~ e listas não são instâncias de ~Num~.
+
+** Algumas classes básicas
+
+- A classe ~Eq~ define uma interface para tipos que suportam teste de igualdade.
+
+#+begin_src haskell
+(==) :: Eq a => a -> a -> Bool -- igual
+(/=) :: Eq a => a -> a -> Bool -- diferente
+#+end_src
+
+** Algumas classes básicas
+
+- Os tipos numéricos, ~Bool~, ~Char~, listas e tuplas são instâncias de ~Eq~.
+
+- Tipos funcionais não são instâncias de ~Eq~.
+
+
+** Algumas classes básicas
+
+- A classe ~Ord~ define uma interface para tipos que suportam operações de comparação.
+
+#+begin_src haskell
+(<) , (>)  :: Ord a => a -> a -> Bool
+(<=), (>=) :: Ord a => a -> a -> Bool
+min , max  :: Ord a => a -> a -> a
+#+end_src
+
+** Algumas classes básicas
+
+- Os tipos numéricos, ~Bool~, ~Char~, listas e tuplas são instâncias de ~Ord~.
+
+- Tipos funcionais não são instâncias de ~Ord~.
+
+** Algumas classes básicas
+
+- A classe ~Show~ define uma operação que converte valores em ~String~.
+
+#+begin_src haskell
+show :: Show a => a -> String
+#+end_src
+
+- Quase todos os tipos podem ser instâncias de ~Show~.
+
+- Tipos funcionais não são instâncias de ~Show~.
+
+* Finalizando
+
+** Finalizando
+
+- Toda expressão possui um tipo.
+
+** Finalizando
+
+- Tipos são usados de duas maneiras:
+    - Verificação de tipos
+    - Inferência de tipos
+
+** Finalizando
+
+- Haskell possui duas formas de polimorfismo:
+    - Polimorfismo paramétrico.
+    - Polimorfismo de sobrecarga.
+
+* Exercícios
+
+** Exercícios
+
+- Escreva definições que possuam os seguintes tipos. 
+
+#+begin_src haskell
+bools :: [Bool]
+nums  :: [[Int]]
+add   :: Int -> Int -> Int -> Int
+copy  :: a -> (a, a)
+apply :: (a -> b) -> a -> b
+swap  :: (a,b) -> (b,a)
+#+end_src
+
+
+
+
