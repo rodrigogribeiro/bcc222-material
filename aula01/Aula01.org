@@ -8,8 +8,8 @@
 #+REVEAL_HLEVEL: 1
 #+REVEAL_ROOT: file:///users/rodrigo/reveal.js
 
-#+Title: Programação Funcional
-#+Author: Apresentação da disciplina
+#+Title: Apresentação da disciplina
+#+Author: Programação Funcional
 
 * O que é Programação Funcional?
 

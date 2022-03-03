@@ -7,8 +7,8 @@
 #+REVEAL_HLEVEL: 1
 #+REVEAL_ROOT: file:///users/rodrigo/reveal.js
 
-#+Title: Programação Funcional
-#+Author: Tipos em Haskell
+#+Title: Tipos em Haskell
+#+Author:  Programação Funcional
 
 * Objetivos
 
