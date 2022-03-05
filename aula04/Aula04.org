@@ -1,0 +1,785 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Aula04.hs
+#+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title: Listas e Recursão
+#+Author:  Programação Funcional
+
+* Objetivos
+
+** Objetivos
+- Apresentar mais funções sobre listas.
+- Apresentar sobre /list comprehensions/.
+- Definição de funções recursivas.
+
+* Recapitulando
+
+** Recapitulando
+
+- Listas são construídas usando:
+  - [] para representar listas vazias.
+  - (:) representa a operação de inserir um novo elemento em uma lista existente.
+- Tipos
+  
+#+begin_src haskell
+[]  :: [a]
+(:) :: a -> [a] -> [a]
+#+end_src
+
+** Recapitulando
+
+- Definição de funções por casamento de padrão
+
+#+begin_src haskell :tangle yes :export code :results output
+module Aula04 where
+
+import Prelude hiding ( length
+                      , replicate
+                      , sum
+                      , reverse
+                      , elem
+                      , take
+                      , (++)
+                      , zip
+                      )
+
+length :: [a] -> Int
+length []       = 0
+length (_ : xs) = 1 + length xs
+#+end_src
+
+** Recapitulando
+
+- Algumas funções úteis sobre listas.
+
+#+begin_src haskell
+null :: [a] -> Bool
+
+head :: [a] -> a
+tail :: [a] -> [a]
+
+reverse :: [a] -> [a]
+(++) :: [a] -> [a] -> [a]
+
+sum :: Num a => [a] -> a
+
+replicate :: Int -> a -> [a]
+#+end_src
+
+
+** Recapitulando
+
+- Utilzando o interpretador =ghci=:
+  - Interpretador infere o tipo *mais geral* para ~sum~.
+  - Tipo permite que a função seja aplicada a várias estruturas de dados.
+
+#+begin_src haskell
+> :t sum
+sum :: (Foldable t, Num a) => t a -> a  
+#+end_src
+
+** Recapitulando
+
+- Obtendo um tipo *menos geral*
+
+#+begin_src haskell
+> :t sum
+sum :: (Foldable t, Num a) => t a -> a
+> :t +d sum
+sum :: [Integer] -> Integer
+#+end_src
+
+* List comprehensions
+
+** List comprehensions
+
+- Notação compacta para construir novas listas a partir de listas existentes.
+
+- Sintaxe inspirada na teoria de conjuntos.
+
+#+begin_src haskell
+[expr | x <- list]
+#+end_src
+
+** List comprehensions
+
+- Exemplo
+  - Similar à notação de conjuntos
+
+\begin{array}{l}
+\{x + 1\,\mid\,x \in xs\}
+\end{array}
+
+#+begin_src haskell :tangle yes :exports code :results output
+incAll :: [Int] -> [Int]
+incAll xs = [x + 1 | x <- xs]
+#+end_src
+
+** Guardas
+
+- List comprehensions podem incluir testes para adicionar ou não um elemento no resultado.
+
+- Sintaxe
+
+#+begin_src haskell
+[expr | x <- list, condition]
+#+end_src
+
+** Guardas
+
+- Exemplo: somar todos os números pares em uma lista.
+  - ~even : Int -> Bool~
+  - Selecione todos os números pares
+  - Some os resultados.
+  
+#+begin_src haskell :tangle yes :exports code :results output
+sumEvens :: [Int] -> Int
+sumEvens xs = sum [x | x <- xs, even x]
+#+end_src
+
+** Casamento de padrão
+
+- É possível usar casamento de padrão em comprehensions.
+
+- Sintaxe
+
+#+begin_src haskell
+[expr | pattern <- list]
+#+end_src
+
+** Casamento de padrão
+
+- Exemplo
+
+#+begin_src haskell :tangle yes :exports code :results output
+heads :: [[a]] -> [a]
+heads xss = [x | (x : _) <- xss]  
+#+end_src
+
+** Múltiplos geradores
+
+- Exemplos:
+
+#+begin_src haskell :results output
+[(x,y) | x <- [1..3], y <- [4..6]]
+#+end_src
+
+#+begin_src haskell :results output
+[(x,y) | x <- [1..3], y <- [x .. 6], x <= y]
+#+end_src
+
+** Primos
+
+- Calcular todos os primos \(\le n\)
+
+** Primos
+
+- Calcular todos os primos \(\le n\)
+
+#+begin_src haskell
+primes :: Int -> [Int]
+primes n = [x | x <- [2 .. n], isPrime x]
+    where
+      isPrime x = _
+#+end_src
+
+
+** Primos
+
+- Calcular todos os primos \(\le n\)
+  - Um número é primo se ele possui 2 fatores.
+
+#+begin_src haskell
+primes :: Int -> [Int]
+primes n = [x | x <- [2 .. n], isPrime x]
+    where
+      isPrime x = (length factors) == 2
+      factors = _
+#+end_src
+
+
+** Primos
+
+- Calcular todos os primos \(\le n\)
+  - Um número é primo se ele possui 2 fatores.
+  - Um número é fator se o resto da divisão é zero.
+
+#+begin_src haskell
+primes :: Int -> [Int]
+primes n = [x | x <- [2 .. n], isPrime x]
+    where
+      isPrime x = (length factors) == 2
+      factors = [ y | y <- [1 .. x]
+                    , x `mod` y == 0 ]
+#+end_src
+
+** Quicksort
+
+- Clássico algoritmo de dividir para conquistar
+  1. Selecione o pivô.
+  2. Particione os elementos em maiores e menores que o pivô.
+  3. Ordene as partições.
+  4. Combine as listas ordenadas.
+
+** Quicksort
+
+1. *Selecione o pivô*
+
+#+begin_src haskell
+qsort :: [Int] -> [Int]
+qsort []       = []
+qsort (pivot : xs) = _
+#+end_src
+
+
+** Quicksort
+
+1. Selecione o pivô
+2. *Particione os elementos em maiores e menores que o pivô.*
+
+#+begin_src haskell
+qsort :: [Int] -> [Int]
+qsort []       = []
+qsort (pivot : xs) = _
+     where
+       smaller = [y | y <- xs, y <= pivot]
+       greater = [y | y <- xs, y > pivot]
+#+end_src
+
+** Quicksort
+
+1. Selecione o pivô
+2. Particione os elementos em maiores e menores que o pivô.
+3. *Ordene as partições*
+
+#+begin_src haskell
+qsort :: [Int] -> [Int]
+qsort []       = []
+qsort (pivot : xs) = _
+     where
+       smaller = qsort [y | y <- xs, y <= pivot]
+       greater = qsort [y | y <- xs, y > pivot]
+#+end_src
+
+** Quicksort
+
+1. Selecione o pivô
+2. Particione os elementos em maiores e menores que o pivô.
+3. Ordene as partições
+4. *Combine as listas ordenadas.*
+   
+#+begin_src haskell :tangle yes :exports code :results output
+qsort :: [Int] -> [Int]
+qsort []       = []
+qsort (pivot : xs) = smaller ++ [pivot] ++ greater
+     where
+       smaller = qsort [y | y <- xs, y <= pivot]
+       greater = qsort [y | y <- xs, y > pivot]
+#+end_src
+
+* Recursão
+
+** Recursão
+
+- Definir algo em termos de si próprio
+
+[[./tirinha1516.png]]
+
+** Recursão
+
+- O que poderia dar errado?
+
+#+begin_src haskell
+-- sem caso base 
+fac :: Int -> Int
+fac n = n * fac (n - 1)
+  
+-- argumento não diminui
+replicate :: Int -> a -> [a]
+replicate n x = x : replicate n x
+#+end_src
+
+** Recursão
+
+- Como evitar problemas de terminação?
+  1. Sempre definir o(s) caso(s) base.
+  2. Sempre realizar chamadas recursivas sobre argumentos menores.
+
+** Recursão
+
+- Para definir funções recursivas, vamos seguir alguns passos bem definidos.
+
+** Recursão passo-a-passo
+
+1. Definir o tipo da função
+2. Enumere os casos da função
+3. Defina os casos base.
+4. Defina os casos recursivos.
+   - *Atenção:* Chamadas recursivas devem sempre ser feitas de forma a garantir a terminação.
+5. Generalize e simplifique
+   - Casamento de padrão cobrindo todos os casos.
+   - Generalize o tipo, caso seja possível.
+
+* Implementando sum 
+
+** Exemplo: sum
+
+- Definir o tipo da função
+
+#+begin_src haskell
+sum :: [Int] -> Int
+#+end_src
+
+
+** Exemplo: sum
+
+- Enumerar os casos
+
+#+begin_src haskell
+sum :: [Int] -> Int
+sum []       = _
+sum (x : xs) = _  
+#+end_src
+
+** Exemplo: sum
+
+- Definir os casos base
+
+#+begin_src haskell
+sum :: [Int] -> Int
+sum []       = 0
+sum (x : xs) = _  
+#+end_src 
+
+
+** Exemplo: sum
+
+- Definir os casos recursivos
+
+#+begin_src haskell
+sum :: [Int] -> Int
+sum []       = 0
+sum (x : xs) = x + sum xs
+#+end_src 
+
+** Exemplo: sum
+
+- Generalize e simplifique
+   - Equações cobrem todos os casos.
+   - Tipo mais geral: usa-se apenas =+=, logo usa-se apenas a classe =Num=.
+
+#+begin_src haskell :tangle yes :exports code :results output
+sum :: Num a => [a] -> a
+sum []       = 0
+sum (x : xs) = x + sum xs
+#+end_src 
+
+* Implementando elem
+
+** Exemplo: elem
+
+- Definir o tipo da função.
+
+#+begin_src haskell
+elem :: Int -> [Int] -> Bool
+#+end_src
+
+** Exemplo: elem
+
+- Enumere os casos da função.
+
+#+begin_src haskell
+elem :: Int -> [Int] -> Bool
+elem _ []       = _
+elem x (y : ys) = _
+#+end_src
+
+** Exemplo: elem
+
+- Defina os casos base.
+
+#+begin_src haskell
+elem :: Int -> [Int] -> Bool
+elem _ []       = False
+elem x (y : ys) = _
+#+end_src
+
+** Exemplo: elem 
+
+- Defina os casos recursivos.
+ 
+#+begin_src haskell
+elem :: Int -> [Int] -> Bool
+elem _ []       = False
+elem x (y : ys) = x == y || elem x ys
+#+end_src
+
+** Exemplo: elem
+
+- Generalize e simplifique
+   - Usa-se apenas a função de igualdade, classe =Eq=.
+   - Equações cobrem todos os casos.
+
+#+begin_src haskell :tangle yes :exports code :results output
+elem :: Eq a => a -> [a] -> Bool
+elem _ []       = False
+elem x (y : ys) = x == y || elem x ys
+#+end_src
+
+* Implementando (++)
+
+** Exemplo: (++)
+
+- O operador =++= representa a concatenação de duas listas.
+
+#+begin_src haskell
+> [1,2] ++ [3,4]
+[1,2,3,4]
+> [] ++ [3,4]
+[3,4]
+#+end_src
+
+** Exemplo: (++)
+
+- Definir o tipo da função
+
+#+begin_src haskell    
+(++) :: [a] -> [a] -> [a]
+#+end_src
+
+** Exemplo: (++)
+
+- Enumere os casos da função
+
+#+begin_src haskell    
+(++) :: [a] -> [a] -> [a]
+[]       ++ ys = _
+(x : xs) ++ ys = _
+#+end_src
+
+** Exemplo: (++)
+
+- Defina os casos base.
+  - Caso a primeira lista seja vazia, retornamos a segunda.
+
+#+begin_src haskell    
+(++) :: [a] -> [a] -> [a]
+[]       ++ ys = ys
+(x : xs) ++ ys = _
+#+end_src
+
+** Exemplo: (++)
+
+- Defina os casos recursivos.
+
+#+begin_src haskell :tangle yes :exports code :results output
+(++) :: [a] -> [a] -> [a]
+[]       ++ ys = ys
+(x : xs) ++ ys = x : (xs ++ ys)
+#+end_src
+
+
+* Implementando take
+
+** Exemplo: take
+
+- A função =take n xs= retorna os =n= primeiros elementos da lista =xs=.
+
+#+begin_src haskell
+> take 2 [1,2,3]
+[1,2]
+> take 0 [1,2,3]
+[]
+> take 4 [1,2,3]
+[1,2,3]
+#+end_src
+
+** Exemplo: take
+
+- Definir o tipo da função
+
+#+begin_src haskell    
+take :: Int -> [a] -> [a]
+#+end_src
+
+** Exemplo: take 
+
+- Enumere os casos da função
+
+#+begin_src haskell    
+take :: Int -> [a] -> [a]
+take 0 []       = _
+take 0 (x : xs) = _
+take n []       = _
+take n (x : xs) = _
+#+end_src
+
+** Exemplo: take 
+
+- Defina os casos base.
+
+#+begin_src haskell    
+take :: Int -> [a] -> [a]
+take 0 []       = []
+take 0 (x : xs) = []
+take n []       = []
+take n (x : xs) = _
+#+end_src
+
+** Exemplo: take
+
+- Defina os casos recursivos.
+
+#+begin_src haskell    
+take :: Int -> [a] -> [a]
+take 0 []       = []
+take 0 (x : xs) = []
+take n []       = []
+take n (x : xs) = x : take (n - 1) xs
+#+end_src
+
+** Exemplo: take
+
+- Generalize e simplifique
+   - Se =n= é 0 a lista não importa.
+   - Se a lista é vazia, o número não importa.
+     
+#+begin_src haskell :tangle yes :exports code :results output
+take :: Int -> [a] -> [a]
+take 0 _        = []
+take _ []       = []
+take n (x : xs) = x : take (n - 1) xs
+#+end_src
+
+* Implementando init 
+
+** Exemplo: init
+
+- =init xs= retorna todos os elementos de uma lista, exceto o último.
+
+#+begin_src haskell
+> init [1,2,3]
+[1,2]
+> init []
+***Exception: Prelude.init:  empty list
+#+end_src
+
+** Exemplo: init
+
+- Definir o tipo da função
+
+#+begin_src haskell
+init :: [a] -> [a]
+#+end_src
+
+** Exemplo: init
+
+- Enumere os casos da função
+
+#+begin_src haskell
+init :: [a] -> [a]
+init []       = _
+init (x : xs) = _
+#+end_src
+
+** Exemplo: init 
+
+- Defina os casos base.
+
+#+begin_src haskell
+init :: [a] -> [a]
+init []       = error "empty list"
+init (x : xs) = _
+#+end_src
+
+** Exemplo: init
+
+- Defina os casos base.
+  - Casamento de padrão sobre =xs=.
+
+#+begin_src haskell
+init :: [a] -> [a]
+init []       = error "empty list"
+init (x : []) = []
+init (y : ys) = _
+#+end_src
+ 
+** Exemplo: init
+
+- Defina os casos recursivos.
+
+#+begin_src haskell
+init :: [a] -> [a]
+init []       = error "empty list"
+init (x : []) = []
+init (y : ys) = y : init ys
+#+end_src
+
+ 
+** Exemplo: init
+
+- Generalize e simplifique
+  - O padrão sobre a cabeça da lista na 2a equação é desnecessário.
+
+#+begin_src haskell
+init :: [a] -> [a]
+init []       = error "empty list"
+init (_ : []) = []
+init (y : ys) = y : init ys
+#+end_src
+
+* Implementando sorted
+
+** Exemplo: sorted
+
+- =sorted xs= retorna =True= se, e somente se, a lista =xs= está ordenada.
+
+#+begin_src haskell
+> sorted [1,2,3]
+True
+> sorted []
+True
+> sorted [2,1,3]
+False
+> sorted [1]
+True
+#+end_src
+
+** Exemplo: sorted
+
+- Definir o tipo da função
+
+#+begin_src haskell    
+sorted :: [Int] -> Bool
+#+end_src
+
+** Exemplo: sorted
+
+- Enumere os casos da função
+
+#+begin_src haskell    
+sorted :: [Int] -> Bool
+sorted []       = _
+sorted (x : xs) = _
+#+end_src
+
+** Exemplo: sorted
+
+- Defina os casos base.
+
+#+begin_src haskell    
+sorted :: [Int] -> Bool
+sorted []       = True
+sorted (x : xs) = _
+#+end_src
+
+** Exemplo: sorted 
+
+- Defina os casos recursivos.
+  - Casamento de padrão para testar os 2 primeiros elementos.
+
+#+begin_src haskell    
+sorted :: [Int] -> Bool
+sorted []           = True
+sorted (x : [])     = True
+sorted (x : y : xs) 
+     | x <= y       = sorted (y : ys)
+     | otherwise    = False
+#+end_src
+
+** Exemplo: sorted
+ 
+- Generalize e simplifique
+   - Padrão sobre listas unitárias
+   - Evitando o casamento de padrão usando =@=.
+   - Generalizando o tipo para a classe =Ord=
+
+#+begin_src haskell :tangle yes :exports code :results output   
+sorted :: Ord a => [a] -> Bool
+sorted []           = True
+sorted [_]          = True
+sorted (x : y : xs) 
+     | x <= y       = sorted (y : ys)
+     | otherwise    = False
+#+end_src
+
+* Implementando zip
+
+** Exemplo: zip
+
+- A função =zip= combina duas listas para formar uma lista de pares de elementos em uma mesma posição.
+  - Caso uma lista possua mais elementos, os adicionais são descartados.
+
+#+begin_src haskell
+> zip [1,2] [3,4]
+[(1,3), (2,4)]
+> zip [1,2] [3]
+[(1,3)]
+#+end_src
+
+** Exemplo: zip 
+
+- Definir o tipo da função
+
+#+begin_src haskell
+zip :: [a] -> [b] -> [(a,b)]
+#+end_src
+
+** Exemplo: zip 
+
+- Enumere os casos da função
+  - Combinações de listas vazias e não vazias.
+
+#+begin_src haskell
+  zip :: [a] -> [b] -> [(a,b)]
+  zip [] []             = _
+  zip [] (y : ys)       = _
+  zip (x : xs) []       = _
+  zip (x : xs) (y : ys) = _
+#+end_src
+
+** Exemplo: zip 
+  
+- Defina os casos base.
+  - Se alguma lista é vazia, o resultado é a lista vazia.
+
+#+begin_src haskell
+zip :: [a] -> [b] -> [(a,b)]
+zip [] []             = []
+zip [] (y : ys)       = []
+zip (x : xs) []       = []
+zip (x : xs) (y : ys) = _
+#+end_src
+
+** Exemplo: zip 
+
+- Defina os casos recursivos.
+
+#+begin_src haskell
+zip :: [a] -> [b] -> [(a,b)]
+zip [] []             = []
+zip [] (y : ys)       = []
+zip (x : xs) []       = []
+zip (x : xs) (y : ys) = (x,y) : zip xs ys
+#+end_src
+
+** Exemplo: zip
+
+- Generalize e simplifique
+   - Usamos uma equação para cada parâmetro de lista vazia.
+     
+#+begin_src haskell :tangle yes :exports code :results output
+zip :: [a] -> [b] -> [(a,b)]
+zip []       _        = []
+zip _        []       = []
+zip (x : xs) (y : ys) = (x,y) : zip xs ys
+#+end_src
+
+* Implementando reverse
+
+** Exemplo: reverse
