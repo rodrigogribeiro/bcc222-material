@@ -687,7 +687,7 @@ sorted (x : xs) = _
 sorted :: [Int] -> Bool
 sorted []           = True
 sorted (x : [])     = True
-sorted (x : y : xs) 
+sorted (x : y : ys) 
      | x <= y       = sorted (y : ys)
      | otherwise    = False
 #+end_src
@@ -703,7 +703,7 @@ sorted (x : y : xs)
 sorted :: Ord a => [a] -> Bool
 sorted []           = True
 sorted [_]          = True
-sorted (x : y : xs) 
+sorted (x : y : ys) 
      | x <= y       = sorted (y : ys)
      | otherwise    = False
 #+end_src
@@ -783,3 +783,168 @@ zip (x : xs) (y : ys) = (x,y) : zip xs ys
 * Implementando reverse
 
 ** Exemplo: reverse
+
+- Função =reverse= inverte a ordem dos elementos de uma lista de entrada.
+
+#+begin_src haskell
+> reverse [1,2,3]
+[3,2,1]
+> reverse []
+[]
+> reverse [1]
+[1]
+#+end_src
+
+** Exemplo: reverse
+
+- Definir o tipo da função
+
+#+begin_src haskell
+reverse :: [a] -> [a]
+#+end_src
+
+** Exemplo: reverse
+ 
+- Enumere os casos da função
+
+#+begin_src haskell
+reverse :: [a] -> [a]
+reverse []       = _
+reverse (x : xs) = _
+#+end_src
+
+** Exemplo: reverse
+
+- Defina os casos base.
+
+#+begin_src haskell
+reverse :: [a] -> [a]
+reverse []       = []
+reverse (x : xs) = _
+#+end_src
+
+** Exemplo: reverse
+
+- Defina os casos recursivos.
+  - Se você tem a lista =1 : [2,3]= ...
+  - O resultado de =reverse [2,3]= é =[3,2]=...
+  - Como combinar o primeiro elemento, =1=, à lista =[3,2]=?
+
+** Exemplo: reverse
+
+- Defina os casos recursivos
+  - Concatene a cabeça ao final da chamada recursiva.
+
+#+begin_src haskell :tangle yes :exports code :results code
+reverse :: [a] -> [a]
+reverse []       = []
+reverse (x : xs) = reverse xs ++ [x]
+#+end_src
+
+* Problema
+
+** Problema
+
+- Essa versão de =reverse= possui um problema.
+  - É ineficiente!
+  - Lembre-se para cada elemento da lista, chamamos =(++)=.
+  - Concatenação possui complexidade linear: \(\mathcal{O}(n)\)
+
+** Problema
+
+- Se a lista tiver /n/ elementos, o número de passos é
+
+\begin{array}{l}
+(n - 1) + (n - 2) + ... + 1 = \dfrac{n \dot (n - 1)}{2} = \mathcal{O}(n^2)
+\end{array}
+
+** Problema
+
+- Em linguagens imperativas, inverter uma lista possui custo da ordem de \(\mathcal{O}(n)\).
+
+- Seria possível obter similar eficiência em Haskell?
+
+** Problema
+
+- Sim! A ideia é o uso de um *acumulador*.
+
+* reverse eficiente
+
+** reverse eficiente
+
+- Acumulador?
+  - Parâmetro adicional que representa resultados intermediários da computação.
+
+** reverse eficiente
+
+- Técnica de acumulador.
+  - Criar uma definição local com um parâmetro adicional (acumulador).
+  - *Invariante*: acumulador contem a solução para todos os elementos até agora.
+
+** reverse eficiente 
+
+- Técnica de acumulador.
+  - Inicialize o acumulador na chamada principal.
+  - Siga os passos para definições recursivas.
+    - Não faça casamento de padrão sobre o acumulador.
+    - Retorne o acumulador no caso base.
+    - Atualize o acumulador no passo recursivo.
+
+** reverse eficiente
+
+- Criando a definição local
+
+#+begin_src haskell
+rev :: [a] -> [a]
+rev xs = _
+   where
+     revAcc xs ac = _
+#+end_src
+
+** reverse eficiente
+
+- Implementando a definição local.
+  - Retornando o acumulador no caso base.
+  - Atualizando o acumulador no caso recursivo.
+
+#+begin_src haskell
+rev :: [a] -> [a]
+rev xs = _
+  where
+   revAcc []       ac = ac
+   revAcc (y : ys) ac = revAcc ys (y : ac)
+#+end_src
+
+** reverse eficiente
+
+- Inicializando o acumulador.
+  - Nessa versão, a lista é percorrida uma única vez.
+  - Logo, complexidade da ordem de \(\mathcal{O}(n)\).
+
+#+begin_src haskell :tangle yes :exports code :results output
+rev :: [a] -> [a]
+rev xs = revAcc xs []
+  where
+   revAcc []       ac = ac
+   revAcc (y : ys) ac = revAcc ys (y : ac)
+#+end_src
+
+* Exercícios
+
+** Exercícios
+
+- Defina a função =minList= que retorna o menor inteiro de uma lista de números fornecida como entrada. 
+
+** Exercícios
+
+- Implemente a função =andList= que produz a conjunção de uma lista de booleanos fornecida como entrada.
+
+- Implemente a função =orList= que produz a disjunção de uma lista de booleanos fornecida como entrada.
+
+** Exercícios
+
+- Implemente a função =indexOf= que, a partir de um inteiro =x= e uma lista de inteiros =xs=, retorna a posição de =x= na lista =xs=. Caso =x= não pertença a lista, o valor -1 deve ser retornado.
+
+** Exercícios
+
+- Implemente a função =removeAll= que, a partir de um inteiro =x= e uma lista de inteiros =xs=, remove todas as ocorrências de =x= da lista =xs=.

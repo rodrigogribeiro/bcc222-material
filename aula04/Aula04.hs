@@ -50,7 +50,7 @@ take n (x : xs) = x : take (n - 1) xs
 sorted :: Ord a => [a] -> Bool
 sorted []           = True
 sorted [_]          = True
-sorted (x : y : xs) 
+sorted (x : y : ys) 
      | x <= y       = sorted (y : ys)
      | otherwise    = False
 
@@ -58,3 +58,13 @@ zip :: [a] -> [b] -> [(a,b)]
 zip []       _        = []
 zip _        []       = []
 zip (x : xs) (y : ys) = (x,y) : zip xs ys
+
+reverse :: [a] -> [a]
+reverse []       = []
+reverse (x : xs) = reverse xs ++ [x]
+
+rev :: [a] -> [a]
+rev xs = revAcc xs []
+  where
+   revAcc []       ac = ac
+   revAcc (y : ys) ac = revAcc ys (y : ac)
