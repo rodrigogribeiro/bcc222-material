@@ -28,7 +28,10 @@ import Prelude hiding ( map
                       , filter
                       , foldr
                       , foldl
+                      , flip
+                      , (.)
                       )
+import Data.Char
 #+end_src
 
 * Função ~map~
@@ -385,4 +388,283 @@ evens :: [Int] -> [Int]
 evens xs = filter even xs
 #+end_src
 
+* Funções Anônimas
 
+** Funções Anônimas
+
+- Haskell permite definirmos funções sem atribuir a elas um nome.
+
+#+begin_src haskell
+\ arguments -> code
+#+end_src
+
+** Funções Anônimas
+
+- Redefinindo =doubleList=:
+
+#+begin_src haskell
+doubleList :: [Int] -> [Int]
+doubleList xs = map (\ x -> 2 * x) xs
+#+end_src
+
+** Funções Anônimas
+
+- A expressão =\ x -> 2 * x= é uma função anônima.
+     - O símbolo =\= representa a letra grega \(\lambda\).
+- Nota histórica: A fundamentação teórica das linguagens funcionais é chamada de \(\lambda\)-cálculo e foi criada por volta de 1930 por Alonzo Church.
+
+** Funções Anônimas
+
+- Expressões \(\lambda\) possuem tipos funcionais.
+
+#+begin_src haskell
+Prelude*> :t \ x -> x ++ "!"
+\ x -> x ++ "!" :: String -> String
+#+end_src
+
+** Funções Anônimas
+
+- Podem ser utilizadas em qualquer lugar em que
+espera-se uma função.
+
+#+begin_src haskell
+Prelude*> (\ x -> x ++ "!") "Hello"
+"Hello!"
+#+end_src
+
+** Funções Anônimas
+
+- Podem ser utilizadas para definir funções.
+
+#+begin_src haskell
+double = \ x -> 2 * x
+#+end_src
+
+* Funções Curried
+
+** Retornando funções
+
+- A função =flip= muda a ordem dos argumentos de uma função fornecida como argumento.
+
+#+begin_src haskell
+flip :: (a -> b -> c) -> (b -> a -> c)
+flip f = _
+#+end_src
+
+** Retornando funções
+
+- A função =flip= muda a ordem dos argumentos de uma função fornecida como argumento.
+  - Cria uma função a partir de outra
+
+#+begin_src haskell
+flip :: (a -> b -> c) -> (b -> a -> c)
+flip f = \ b a -> f a b
+#+end_src
+
+** Funções Curried
+
+- Em Haskell, funções recebem um argumento por vez.
+
+- Funções, em Haskell, são *currificadas*.
+
+#+begin_src haskell
+map :: (a -> b) -> [a] -> [b]
+map :: (a -> b) -> ([a] -> [b])
+#+end_src
+
+** Funções Curried
+
+- Uma função de dois argumentos é, na verdade, uma função de um argumento que retorna outra função de um argumento.
+
+** Funções Curried
+
+- Exemplo: funções com 3 argumentos.
+
+#+begin_src haskell :tangle yes :exports code :results output
+multThree :: Int -> Int -> Int -> Int
+multThree x y z = x * y * z
+#+end_src
+
+** Funções Curried
+
+- Exemplo: funções com 3 argumentos.
+  - Funções associam à esquerda.
+
+#+begin_src haskell
+multThree :: Int -> (Int -> (Int -> Int))
+multThree x y z = x * y * z
+#+end_src
+
+** Funções Curried
+
+- Várias versões da mesma função
+
+#+begin_src haskell
+multThree x y z = x * y * z
+multThree x y = \ z -> x * y * z
+multThree x = \ y z -> x * y * z
+multThree = \ x y z -> x * y * z
+#+end_src
+
+* Aplicação parcial
+
+** Aplicação parcial
+
+- Como funções recebem um argumento por vez...
+- Podemos fornecer menos argumentos e retornar uma função.
+  - Fornecer menos argumentos e retornar uma função é o que chamamos de *aplicação parcial*.
+
+** Aplicação parcial
+
+- Exemplo
+
+#+begin_src haskell
+> :t map (\ x -> 2 * x)
+map (\ x -> 2 * x) :: Num a => [a] -> [a]
+#+end_src
+
+** Aplicação parcial
+
+- Definição por aplicação parcial
+  - Podemos usar a aplicação parcial para definição de funções.
+- Exemplo
+  - Podemos definir:
+
+#+begin_src haskell
+doubleList' xs = map (\ x -> 2 * x) xs
+#+end_src
+
+  - Como:
+
+#+begin_src haskell :tangle yes :exports code :results output
+doubleList' = map (\ x -> 2 * x)
+#+end_src
+
+** Aplicação parcial
+
+- Outra possibilidade de aplicação parcial é a de operadores.
+    
+#+begin_src haskell
+(x #) = \ x -> x # y
+(# y) = \ x -> x # y
+#+end_src
+
+- Exemplo
+
+#+begin_src haskell :tangle yes :exports code :results output
+greaterThan5 = filter (> 5)
+#+end_src
+
+* Composição
+
+** Composição
+
+- Em matemática, a definição de composição de funções
+
+\begin{array}{l}
+f : A \to B \\
+g : B \to C \\
+\end{array}
+
+- é dada por:
+
+\begin{array}{l}
+g \circ f(x) = g (f x)
+\end{array}
+
+** Composição
+
+- Em Haskell, podemos representar a mesma definição usando a seguinte função de ordem superior:
+
+#+begin_src haskell :tangle yes :exports code :results output
+(.) :: (b -> c) -> (a -> b) -> a -> c
+g . f = \ x -> g (f x)
+#+end_src
+
+** Composição
+
+- Exemplos
+
+#+begin_src haskell
+not :: Bool -> Bool
+even :: Int -> Bool
+
+odd = not . even
+
+filterNot :: (a -> Bool) -> [a] -> [a]
+filterNot p = filter (not . p)
+#+end_src
+
+** Composição
+
+- Exemplo
+  - Desenvolver a maior das médias de uma lista de listas de números
+
+#+begin_src haskell
+maxAverage :: [[Float]] -> Float
+#+end_src
+
+- Como utilizar a composição para implementar essa função?
+
+** Composição
+
+- Implementar funções usando composição envolve formar uma sequência de transformações do tipo das entradas na saída.
+
+** Composição
+
+- Para construir =maxAverage=, vamos usar os seguintes passos:
+  - 1. vamos remover as listas vazias de do argumento ~[[Float]]~.
+
+#+begin_src haskell :tangle yes :exports code :results output
+removeNull :: [[a]] -> [[a]]
+removeNull = filter (not . null)
+#+end_src
+
+** Composição
+
+- 2. Calcular a média de cada uma das listas ~[Float]~ em ~[[Float]]~.
+
+#+begin_src haskell :tangle yes :exports code :results output
+averageList :: [[Float]] -> [Float]
+averageList = map average
+    where
+       average xs = sum xs / fromIntegral (length xs) 
+#+end_src
+
+** Composição
+
+- Usando as funções anteriores, podemos definir =maxAverage= como:
+
+#+begin_src haskell :tangle yes :exports code :results output
+maxAverage :: [[Float]] -> Float
+maxAverage = maximum . averageList . removeNull  
+#+end_src
+
+** Composição
+
+- Função =maxAverage=: escrita em /point-free/ style.
+
+#+begin_src haskell 
+maxAverage :: [[Float]] -> Float
+maxAverage = maximum . map average . filter (not . null)
+  where
+    average xs = sum xs / fromIntegral (length xs)
+#+end_src
+
+* Exercícios
+
+** Exercícios
+
+- Implemente a função =capitalize= que converte todas as letras minúsculas em uma string para maiúsculas. Utilize a função =toUpper= da biblioteca =Data.Char=.
+
+#+begin_src haskell
+capitalize :: String -> String
+#+end_src
+
+** Exercícios
+
+- Implemente a função =withoutPrimes= que remove todos os valores primos de uma lista de inteiros fornecida como argumento.
+
+#+begin_src haskell
+withoutPrimes :: [Int] -> [Int]
+#+end_src 

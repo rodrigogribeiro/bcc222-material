@@ -1,0 +1,286 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Aula06.hs
+#+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title: Funções de ordem superior
+#+Author:  Programação Funcional
+
+
+* Objetivos
+
+** Objetivos
+
+- Apresentar as funções =foldr= e =foldl=.
+
+- Mostrar a relação de construtores de listas e a função =foldr=.
+
+** Setup inicial
+
+#+begin_src haskell :tangle yes :exports code :results output
+module Aula06 where
+
+import Prelude hiding ( foldr
+                      , foldl
+                      , sum
+                      , concat
+                      , and
+                      , length
+                      , map
+                      , reverse
+                      , filter
+                      , (++)
+                      )
+#+end_src
+
+* Função ~foldr~
+
+** Similaridades
+
+- Repetição de código
+
+#+begin_src haskell
+sum []       = 0
+sum (x : xs) = x + sum xs
+
+concat []         = []
+concat (xs : xss) = xs ++ concat xss
+
+and []       = True
+and (x : xs) = x && and xs
+#+end_src
+
+** Padrão
+
+- Funções anteriores exibem o seguinte padrão.
+  - Caso de lista vazia: retornam um valor padrão.
+  - Lista não vazia: utilizam uma função para combinar a cabeça com o resultado da chamada recursiva sobre a cauda.
+
+** Padrão
+
+- Vamos abstrair:
+     - Valor retornado para lista vazia
+     - Função para combinar a cabeça e resultado da chamada recursiva.
+
+#+begin_src haskell :tangle yes :exports code :results output
+foldr :: (a -> b -> b) -> b -> [a] -> b
+foldr _ v []       = v
+foldr f v (x : xs) = x `f` foldr f v xs
+#+end_src
+
+** Refatorando
+
+#+begin_src haskell :tangle yes :exports code :results output
+sum = foldr (+) 0
+
+concat = foldr (++) []
+
+and = foldr (&&) True
+#+end_src
+
+** ~foldr~ is for right
+
+#+begin_src haskell
+foldr (+) 0 (x : y : z : [])   =
+x + foldr (+) 0 (y : z : [])   =
+x + (y + foldr (+) 0 (z : [])) =
+x + (y + (z + foldr (+) 0 [])) =
+x + (y + (z + 0))
+#+end_src
+
+** ~foldr~ e listas
+
+- A função ~foldr~ segue a estrutura de listas.
+  - A lista vazia é substituída por 0
+    - (:) é substituído por (+)
+
+#+begin_src haskell
+foldr (+) 0 (x :  y :  z : [])
+               |    |    |
+            (x + (y + (z +  0)))
+#+end_src
+
+
+** Funções como ~foldr~
+
+- Passos para refatorar recursão usando foldr.
+  - Toda definição possui o seguinte template.
+  - função ~step~ combina a cabeça com resultado da chamada recursiva.
+
+#+begin_src haskell
+foo = foldr step v
+#+end_src 
+
+
+** ~length~
+
+- Implementando ~length~ usando ~foldr~.
+
+#+begin_src haskell
+length :: [a] -> Int
+length []       = 0
+length (_ : xs) = 1 + length xs
+#+end_src
+
+
+** ~length~
+
+- Versão final
+
+#+begin_src haskell :tangle yes :exports code :results output
+length :: [a] -> Int
+length = foldr step 0
+   where
+     step _ ac = 1 + ac
+#+end_src
+
+
+** Implementando ~map~
+
+#+begin_src haskell 
+map :: (a -> b) -> [a] -> [b]
+map _ []       = []
+map f (x : xs) = f x : map f xs
+#+end_src
+
+** Implementando ~map~
+
+#+begin_src haskell
+map :: (a -> b) -> [a] -> [b]
+map f = foldr step []
+   where
+     step x ac = _
+#+end_src
+
+** Implementando ~map~
+
+#+begin_src haskell :tangle yes :exports code :results output
+map :: (a -> b) -> [a] -> [b]
+map f = foldr step []
+   where
+     step x ac = f x : ac
+#+end_src
+
+** Função ~reverse~
+
+#+begin_src haskell
+reverse :: [a] -> [a]
+reverse = foldr step []
+    where
+      step x ac = ac ++ [x]
+#+end_src
+
+** Função ~reverse~
+
+- Problema da definição anterior: ~reverse~ usa a concatenação e, por isso, é da ordem de \(\mathcal{O}(n^2)\).
+
+- Como melhorar isso?
+
+** Função ~reverse~
+
+- Uso do ~foldr~ faz com que as chamadas se aninhem à direita.
+
+- Seria possível fazer um ~fold~ que aninha chamadas à esquerda?
+
+* Função ~foldl~
+
+** Fold left
+
+#+begin_src haskell :tangle yes :exports code :results output
+foldl :: (b -> a -> b) -> b -> [a] -> b
+foldl _ v []       = v
+foldl f v (x : xs) = foldl f (f v x) xs
+#+end_src
+
+** Exemplo
+
+#+begin_src haskell
+foldl (+) 0 (x : (y : (z : []))) =
+foldl (+) (0 + x) (y : (z : [])) =
+foldl (+) ((0 + x) + y) (z : []) =
+foldl (+) (((0 + x) + y) + z) [] =
+((0 + x) + y) + z
+#+end_src
+
+** Função ~reverse~
+
+- Usando ~foldl~ obtemos complexidade da ordem de \(\mathcal{O}(n)\).
+
+#+begin_src haskell :tangle yes :exports code :results output
+reverse = foldl step []
+   where
+     step ac x = x : ac
+#+end_src
+
+** Exemplo
+
+- Implemente a função ~filter~ usando ~foldr~.
+
+#+begin_src haskell
+filter :: (a -> Bool) -> [a] -> [a]
+filter _ []     = []
+filter p (x : xs)
+    | p x       = x : filter p xs
+    | otherwise = filter p xs
+#+end_src
+
+** Exemplo
+
+- Implemente a função ~filter~ usando ~foldr~.
+
+#+begin_src haskell :tangle yes :exports code :results output
+filter :: (a -> Bool) -> [a] -> [a]
+filter p = foldr step []
+   where
+     step x ac = if p x then x : ac else ac
+#+end_src
+
+** Exercício
+
+- Implemente a concatenação de listas usando ~foldr~.
+
+#+begin_src haskell :tangle yes :exports code :results output
+(++) :: [a] -> [a] -> [a]
+[]       ++ ys = ys
+(x : xs) ++ ys = x : (xs ++ ys)
+#+end_src
+
+* Exercícios
+
+** Exercício
+
+- A função ~takeWhile~ é definida como:
+
+#+begin_src haskell
+takeWhile :: (a -> Bool) -> [a] -> [a]
+takeWhile _ []  = []
+takeWhile p (x : xs)
+    | p x       = x : takeWhile p xs
+    | otherwise = []
+#+end_src
+
+Implemente ~takeWhile~ usando ~foldr~.
+
+** Exercício
+
+- A função ~all~ determina se todos os elementos de uma lista satisfazem um predicado. Seu tipo é:
+
+#+begin_src haskell
+all :: (a -> Bool) -> [a] -> Bool
+#+end_src
+
+- Implemente a função ~all~: 1) usando recursão e 2) usando ~foldr~.
+
+** Exercício
+
+- Implemente a função ~concatMap~ de tipo:
+
+#+begin_src haskell
+concatMap :: (a -> [b]) -> [a] -> [b]
+#+end_src
+
+- Usando recursão e ~foldr~.
