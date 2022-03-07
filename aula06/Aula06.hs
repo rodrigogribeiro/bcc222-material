@@ -44,7 +44,3 @@ filter :: (a -> Bool) -> [a] -> [a]
 filter p = foldr step []
    where
      step x ac = if p x then x : ac else ac
-
-(++) :: [a] -> [a] -> [a]
-[]       ++ ys = ys
-(x : xs) ++ ys = x : (xs ++ ys)

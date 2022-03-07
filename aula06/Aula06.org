@@ -239,15 +239,74 @@ filter p = foldr step []
      step x ac = if p x then x : ac else ac
 #+end_src
 
-** Exercício
 
-- Implemente a concatenação de listas usando ~foldr~.
+* ~foldr~ vs ~foldl~
 
-#+begin_src haskell :tangle yes :exports code :results output
-(++) :: [a] -> [a] -> [a]
-[]       ++ ys = ys
-(x : xs) ++ ys = x : (xs ++ ys)
+** ~foldr~ vs ~foldl~
+
+- Qual a relação entre ~foldr~ e ~foldl~?
+
+- Ambas as funções retornam o mesmo resultado?
+
+** ~foldr~ vs ~foldl~
+
+- Para a adição, o resultado é o mesmo...
+
+#+begin_src haskell
+> foldr (+) 0 [1,2,3]
+6
+> foldl (+) 0 [1,2,3]
+6
 #+end_src
+
+** ~foldr~ vs ~foldl~
+
+- Porém, para a subtração o resultado é diferente...
+
+#+begin_src haskell
+> foldr (-) 0 [1,2,3]
+2
+> foldr (-) 0 [1,2,3]
+-6
+#+end_src
+ 
+** ~foldr~ vs ~foldl~
+
+- Podemos garantir que o resultado de
+
+#+begin_src haskell
+foldr f v xs = foldl f v xs
+#+end_src
+
+- Será igual se =f= e =v= formam uma estrutura matemática conhecida como /monóide/.
+
+** Monóide
+
+- Um monóide é uma estrutura matemática formada por:
+  - Um conjunto não vazio \(A\).
+  - Uma função binária sobre \(A\), \(\circ : A \to A \to A\)
+  - Um elemento \(\epsilon : A\)
+
+** Monóide
+
+- A estrutura de um monóide deve atender as seguintes propriedades:
+  - \(x \circ (y\circ z) = (x \circ y) \circ z\)
+  - x \circ \epsilon = \epsilon \circ x = x
+
+** Monóide
+
+- Posteriormente no curso, veremos como monóides são uma abstração importante para desenvolvimento de software.
+
+- Além disso, provaremos a equivalência de =foldr= e =foldl= quando aplicadas a monóides.
+
+* Concluindo
+
+** Concluindo
+
+- Funções de ordem superior recebem *funções* como *argumentos*.
+- Funções currificadas retornam *funções* como *resultados*.
+- Funções =map=, =foldr/l=, =filter= abstraem padrões de computação.
+  
 
 * Exercícios
 
