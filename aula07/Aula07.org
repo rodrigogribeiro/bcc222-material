@@ -1,0 +1,734 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Aula07.hs
+#+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title: Tipos de dados algébricos
+#+Author:  Programação Funcional
+
+
+* Objetivos
+
+** Objetivos
+
+- Apresentar o conceito de tipos de dados algébricos.
+- Apresentar as construções de Haskell para esse conceito.
+
+** Setup inicial
+
+#+begin_src haskell :tangle yes :exports code :results output
+{-# LANGUAGE StandaloneDeriving #-}
+module Aula07 where
+
+import Prelude hiding ( Maybe
+                      , Nothing
+                      , Just
+                      )
+
+deriving instance Show Direction
+deriving instance Show Point
+deriving instance Show Shape
+deriving instance Show IntList
+deriving instance Show IntTree
+deriving instance Show a => Show (Maybe a)
+deriving instance Show Cli1
+deriving instance Show Client
+#+end_src
+
+* Anteriormente...
+
+** Anteriormente...
+
+- Usamos somente tipos pré-definidos da linguagem Haskell.
+
+- Tipos básicos: Int, Char, Bool ...
+
+** Anteriormente...
+
+- Tipos compostos: Listas, tuplas.
+
+- Nesta aula, veremos como definir novos tipos de dados.
+
+
+* Enumerações
+
+** Enumerações
+
+- O tipo de dados mais simples é o de enumeração.
+
+- Consiste de uma sequência finita de valores.
+
+#+begin_src haskell
+data Bool = True | False
+#+end_src
+
+** Enumerações
+
+- Tipo de dados para direções.
+
+#+begin_src haskell :tangle yes :exports code :results output
+data Direction = North | South
+               | East  | West
+#+end_src
+
+- Declaração inicia com a palavra reservada **data** seguida de um nome iniciado com letra maiúscula.
+
+- Seguido de um ou mais **construtores de dados**.
+  - Nomes de construtores também iniciam com letras maiúsculas.
+
+** Enumerações
+
+- Cada construtor define um valor do tipo de dados.
+
+#+begin_src haskell
+> :t North
+North :: Direction
+#+end_src
+
+** Enumerações
+
+- Podemos usar o tipo ~Direction~ para formar listas e tuplas.
+
+#+begin_src haskell
+:t [North, South]
+[North, South] :: [Direction]
+
+:t (South, True)
+(South, True) :: (Direction, Bool)
+#+end_src
+
+** Casamento de padrão
+
+- A definição de funções sobre novos tipos é feita por casamento de padrão sobre seus construtores.
+
+- Vamos definir uma função para converter valores de tipo ~Direction~ em ~String~.
+
+** Casamento de padrão
+
+- Definir o tipo
+
+#+begin_src haskell
+directionName :: Direction -> String
+#+end_src
+
+** Casamento de padrão
+
+- Enumerar os casos.
+  - Definimos uma equação para cada construtor.
+
+#+begin_src haskell
+directionName :: Direction -> String
+directionName North = _
+directionName South = _
+directionName East  = _
+directionName West  = _
+#+end_src
+
+** Casamento de padrão
+
+- Implementando os casos.
+
+#+begin_src haskell :tangle yes :exports code :results output
+directionName :: Direction -> String
+directionName North = "N"
+directionName South = "S"
+directionName East  = "E"
+directionName West  = "W"
+#+end_src
+
+** Tipos de dados básicos
+
+- Tipos de dados básicos podem ser vistos como enumerações.
+
+#+begin_src haskell 
+data Bool = True | False
+data Int = ... | -2 | -1 | 0 | 1 | 2 ...
+data Char = ... | 'A' | 'B' ...
+#+end_src
+
+** Tipos de dados básicos
+
+- A definição do tipo ~Bool~ é exatamente como acima.
+
+- Tipos ~Int~ e ~Char~ são tratados pelo compilador de maneira especial.
+
+* Pontos
+
+** Pontos
+
+- Tipos de dados podem armazenar informações em construtores.
+
+#+begin_src haskell :tangle yes :exports code :results output
+data Point = Point Float Float
+#+end_src
+
+** Pontos 
+
+- O nome do construtor é seguido por uma lista de seus parâmetros.
+
+- O nome de um construtor pode ser igual ao seu tipo.
+
+** Criando Pontos
+
+- Para criar um valor do tipo ~Point~ usamos o construtor ~Point~ seguido dos valores para cada um de seus argumentos.
+
+#+begin_src haskell
+:t Point 1.0 3.0
+
+(Point 1.0 3.0) :: Point
+#+end_src
+
+** Criando Pontos
+
+- Para casamento de padrão, usamos o nome do construtor seguido de padrões para seus argumentos.
+
+#+begin_src haskell :tangle yes :exports code :results output
+norm :: Point -> Float
+norm (Point x y) = sqrt (x * x + y * y)
+#+end_src
+
+** Construtores são funções
+
+- Cada construtor de um tipo de dados é uma função que constrói valores do tipo em questão.
+
+#+begin_src haskell
+:t North
+North :: Direction -- sem argumentos
+
+:t Point
+Point :: Float -> Float -> Point -- 2 argumento
+#+end_src
+
+* Formas geométricas
+
+** Formas geométricas
+
+- Tipos de dados podem possuir zero ou mais construtores.
+
+- Cada construtor pode ter zero ou mais argumentos.
+
+#+begin_src haskell :tangle yes :exports code :results output
+data Shape
+   = Rectangle Point Float Float
+   | Circle Point Float
+   | Triangle Point Point Point
+#+end_src
+
+- Chamamos esses tipos de **Tipos de Dados Algébricos**.
+
+** Perímetro de formas
+
+- Vamos definir uma função para calcular o perímetro de formas geométricas definidas pelo tipo ~Shape~.
+
+- Fórmulas para calcular o perímetro.
+
+\begin{array}{lcl}
+   P_{rect}     & = & 2w + 2h\\
+   P_{circle}   & = & 2\pi r\\
+   P_{triangle} & = & dist(a,b) + dist(b,c) + dist(c,a)\\
+\end{array}
+
+
+** Perímetro de formas
+
+- Cada caso define um padrão para cada construtor do tipo ~Shape~.
+
+#+begin_src haskell :tangle yes :exports code :results output
+perimeter :: Shape -> Float
+perimeter (Rectangle _ w h) = 2 * w + 2 * h
+perimeter (Circle _ r) = 2 * pi * r
+perimeter (Triangle a b c) = dist (a,b) + dist (b,c) + dist (c,a)
+#+end_src
+
+
+** Perímetro de formas
+
+- Distância entre pontos
+
+#+begin_src haskell :tangle yes :exports code :results output
+dist :: (Point, Point) -> Float
+dist ((Point x1 y1), (Point x2 y2))
+  = sqrt (x11 * x11 + y11 * y11)
+   where
+     x11 = x1 - x2
+     y11 = y1 - y2
+#+end_src
+
+
+* Tipos recursivos
+
+** Tipos recursivos
+
+- Usando o mecanismo de definição de tipos, podemos definir tipos para listas e árvores de números inteiros.
+
+#+begin_src haskell :tangle yes :exports code :results output
+data IntList = INil | ICons Int IntList
+
+data IntTree = ILeaf | INode Int IntTree IntTree
+#+end_src
+
+** Busca sequencial
+
+- Definindo o tipo
+
+#+begin_src haskell
+elemIntList :: Int -> IntList -> Bool
+#+end_src
+
+** Busca sequencial
+
+- Enumerando os casos
+
+#+begin_src haskell 
+elemIntList :: Int -> IntList -> Bool
+elemIntList _ INil         = _
+elemIntList x (ICons y ys) = _
+#+end_src
+
+** Busca sequencial
+
+- Definindo caso base
+
+#+begin_src haskell
+elemIntList :: Int -> IntList -> Bool
+elemIntList _ INil         = False
+elemIntList x (ICons y ys) = _
+#+end_src
+
+** Busca sequencial
+
+- Definindo caso recursivo
+
+#+begin_src haskell 
+elemIntList :: Int -> IntList -> Bool
+elemIntList _ INil = False
+elemIntList x (ICons y ys) = x == y || elemIntList x ys
+#+end_src
+
+
+** Busca em árvores
+
+- Definindo o tipo.
+
+#+begin_src haskell
+elemIntTree :: Int -> IntTree -> Bool
+#+end_src
+
+** Busca em árvores
+
+- Enumerando os casos.
+
+#+begin_src haskell
+elemIntTree :: Int -> IntTree -> Bool
+elemIntTree _ ILeaf         = _
+elemIntTree x (INode y l r) = _ 
+#+end_src
+
+** Busca em árvores
+
+- Definindo o caso base
+
+#+begin_src haskell
+elemIntTree :: Int -> IntTree -> Bool
+elemIntTree _ ILeaf         = False
+elemIntTree x (INode y l r) = _
+#+end_src
+
+** Busca em árvores
+
+- Definindo o caso recursivo
+
+#+begin_src haskell :tangle yes :exports code :results output
+elemIntTree :: Int -> IntTree -> Bool
+elemIntTree _ ILeaf = False
+elemIntTree x (INode y l r)
+  | x < y           = elemIntTree x l
+  | x > y           = elemIntTree x r
+  | otherwise       = True
+#+end_src
+
+** Altura em árvores
+
+- Altura de uma folha (~ILeaf~) é igual a zero.
+
+- Altura de um nó é igual a 1 mais o maior valor dentre as alturas das subárvores.
+
+** Altura em árvores
+
+- Definindo o tipo.
+
+#+begin_src haskell
+itreeHeight :: IntTree -> Int
+#+end_src
+
+** Altura em árvores
+
+- Enumerando os casos.
+
+#+begin_src haskell
+itreeHeight :: IntTree -> Int
+itreeHeight ILeaf         = _
+itreeHeight (INode _ l r) = _
+#+end_src
+
+** Altura em árvores
+
+- Definindo o caso base.
+
+#+begin_src haskell
+itreeHeight :: IntTree -> Int
+itreeHeight ILeaf         = 0
+itreeHeight (INode _ l r) = _
+#+end_src
+
+** Altura em árvores
+
+- Definindo o caso recursivo.
+
+#+begin_src haskell
+itreeHeight :: IntTree -> Int
+itreeHeight ILeaf = 0
+itreeHeight (INode _ l r)
+  = 1 + max (itreeHeight l) (itreeHeight r)
+#+end_src
+
+** Convertendo em listas
+
+- Primeiramente, vamos precisar de uma função para concatenar listas (~IntList~).
+- Definindo o tipo.
+
+#+begin_src haskell
+concatIntList :: IntList -> IntList -> IntList
+#+end_src
+
+** Convertendo em listas
+
+- Enumerando os casos.
+
+#+begin_src haskell
+concatIntList :: IntList -> IntList -> IntList
+concatIntList INil         ys = _
+concatIntList (ICons x xs) ys = _
+#+end_src
+
+** Convertendo em listas
+
+- Definindo o caso base.
+
+#+begin_src haskell
+concatIntList :: IntList -> IntList -> IntList
+concatIntList INil         ys = ys
+concatIntList (ICons x xs) ys = _
+#+end_src
+
+** Convertendo em listas
+
+- Definindo o caso recursivo.
+
+#+begin_src haskell :tangle yes :exports code :results output
+concatIntList :: IntList -> IntList -> IntList
+concatIntList INil         ys = ys
+concatIntList (ICons x xs) ys = ICons x (concatIntList xs ys)
+#+end_src
+
+** Convertendo em listas
+
+- Usando a função de concatenação, podemos definir a conversão de árvores em listas.
+
+- Definindo o tipo.
+
+#+begin_src haskell
+intTreeToList :: IntTree -> IntList
+#+end_src
+
+** Convertendo em listas
+
+- Enumerando os casos.
+
+#+begin_src haskell
+intTreeToList :: IntTree -> IntList
+intTreeToList ILeaf         = _
+intTreeToList (INode x l r) = _
+#+end_src
+
+** Convertendo em listas
+
+- Definindo o caso base.
+
+#+begin_src haskell
+intTreeToList :: IntTree -> IntList
+intTreeToList ILeaf         = INil
+intTreeToList (INode x l r) = _
+#+end_src
+
+** Convertendo em listas
+
+- Definindo o caso recursivo.
+
+#+begin_src haskell :tangle yes :exports code :results output
+intTreeToList :: IntTree -> IntList
+intTreeToList ILeaf         = INil
+intTreeToList (INode x l r) = ICons x (concatIntList l' r')
+    where
+      l' = intTreeToList l
+      r' = intTreeToList r
+#+end_src
+
+* Tipos polimórficos
+
+** Tipos polimórficos
+
+- Vimos que listas e tuplas são tipos polimórficos previamente definidos em Haskell.
+
+- Como definir um novo tipo polimórfico?
+
+** Tipos polimórficos
+
+- Tipo ~Maybe a~ representa um possível valor de tipo ~a~.
+
+#+begin_src haskell :tangle yes :exports code :results output
+data Maybe a
+  = Just a | Nothing
+#+end_src
+
+** Tipos polimórficos
+
+- Na declaração de um tipo polimórfico, o nome do tipo é seguido por uma ou mais variáveis de tipo.
+  - Variáveis de tipo são identificadores formados por letras minúsculas.
+  - Construtores podem referenciar variáveis em seus argumentos.
+
+** Tipo ~Maybe~
+
+#+begin_src haskell
+> :t Just True
+(Just True) :: Maybe Bool
+
+> :t Nothing
+Nothing :: Maybe a
+#+end_src
+
+** Tipo ~Maybe~
+
+- Observe que no primeiro exemplo, o valor ~True~ permitiu o GHC determinar que o parâmetro ~a~ de ~Maybe a~ deve ser ~a = Bool~.
+
+** Tipo ~Maybe~
+
+- No segundo exemplo, o construtor ~Nothing~ manteve seu tipo polimórfico por não haver informação para determinar uma possível instanciação da variável ~a~.
+
+** Exemplo
+
+- Usando o tipo ~Maybe~ podemos implementar uma versão segura da função ~head~.
+
+#+begin_src haskell :tangle yes :exports code :results output
+safeHead :: [a] -> Maybe a
+safeHead [] = Nothing
+safeHead (x : _) = Just x
+#+end_src
+
+** Exemplo
+
+- Observe que ao usarmos ~safeHead~ sobre uma lista vazia, não incorremos em erro de tempo de execução, como em ~head~.
+
+#+begin_src haskell
+head []
+***Exception: Prelude.head: empty list
+#+end_src
+
+** Exemplo
+
+- Determinando a posição de um elemento em uma lista.
+  - Necessário a restrição ~Eq a~ para permitir o uso da igualdade em tipos polimórficos.
+  - Retornamos ~Nothing~ quando o elemento não pertence a lista.
+
+- Definindo o tipo
+
+#+begin_src haskell
+position :: Eq a => a -> [a] -> Maybe Int
+#+end_src
+
+** Exemplo
+
+- Usaremos uma função auxiliar para permitir o uso de um acumulador.
+
+- Enumerando os casos
+
+#+begin_src haskell 
+position :: Eq a => a -> [a] -> Maybe Int
+position x xs = pos x xs 0
+   where
+     pos _ [] _        = _
+     pos x (y : ys) ac = _
+#+end_src
+
+** Exemplo
+
+- Definindo o caso base
+
+#+begin_src haskell
+position :: Eq a => a -> [a] -> Maybe Int
+position x xs = pos x xs 0
+   where
+     pos _ [] _        = Nothing
+     pos x (y : ys) ac = _
+#+end_src
+
+** Exemplo
+
+- Definindo o caso recursivo
+
+#+begin_src haskell :tangle yes :exports code :results output
+position :: Eq a => a -> [a] -> Maybe Int
+position x xs = pos x xs 0
+   where
+     pos _ [] _        = Nothing
+     pos x (y : ys) ac
+       | x == y        = Just ac
+       | otherwise     = pos x ys (ac + 1)
+#+end_src
+
+
+* Representando clientes
+
+** Problema
+
+- Representar informação sobre um cliente.
+- Informação composta por:
+    - Nome
+    - Sobrenome
+    - Aceita receber informações sobre promoções?
+
+** Modelagem
+
+- Informações representadas pelos tipos:
+    - Nome - String
+    - Sobrenome - String
+    - Ofertas - Bool
+- Como definir o tipo cliente?
+
+** Modelagem
+
+- Podemos utilizar uma tupla!
+
+#+begin_src haskell :tangle yes :exports code :results output
+ex1 :: (String, String, Bool)
+ex1 = ("José", "Silva", False)
+#+end_src
+
+** Problemas
+
+- Uso do tipo String é pouco informativo!
+  - Como diferenciar de nome e sobrenome?
+    - Usar a posição na tripla é algo propenso a erros.
+
+** Sinônimos
+
+- Podemos melhorar a legibilidade do código usando sinônimos de tipos.
+
+#+begin_src haskell :tangle yes :exports code :results output
+type Name      = String
+type Surname   = String
+type SendOffer = Bool
+#+end_src
+
+** Modelagem
+
+- Representando o exemplo anterior.
+
+#+begin_src haskell :tangle yes :exports code :results output
+type Cli = (Name, Surname, SendOffer)
+
+ex2 :: Cli
+ex2 = ("José", "Silva", False)
+#+end_src
+
+** Modelagem
+
+- Agora, o código é mais informativo!
+
+- Porém, ainda dependente da posição de componentes no par.
+
+** Modelagem
+
+- O uso de sinônimos não define um novo tipo de dados!
+
+- Logo, os tipos Cli e (String, String, Bool) são idênticos!
+
+- Podemos melhorar isso?
+
+
+** Tipos Algébricos
+
+- Podemos definir um novo tipo de dados em Haskell.
+
+#+begin_src haskell :tangle yes :exports code :results output
+data Cli1
+ = Cust Name Surname SendOffer
+
+ex3 :: Cli1
+ex3 = Cust "José" "Silva" False
+#+end_src
+
+** Problema
+
+- Como exibir uma mensagem de boas vindas para um cliente assim que ele acessa a aplicação?
+
+- Tarefa: definir uma função, que a partir de um cliente, produza uma mensagem de boas vindas.
+
+** Problema
+
+- A implementação de uma função de uma função para gerar a mensagem pode ser feita por casamento de padrão.
+
+#+begin_src haskell :tangle yes :exports code :results output
+greet :: Cli1 -> String
+greet (Cust n _ _) = "Welcome, " ++ n ++ "!"
+#+end_src
+
+** Registros
+
+- Haskell permite a definição de registros.
+
+#+begin_src haskell :tangle yes :exports code :results output
+data Client
+  = Customer {
+      name    :: Name
+    , surname :: Surname
+    , offers  :: SendOffer
+    }
+#+end_src
+
+** Registros
+
+- Cada campo do registro define uma função de projeção
+
+#+begin_src haskell
+name    :: Client -> Name
+surname :: Client -> Surname
+offers  :: Client -> SendOffer
+#+end_src
+
+** Exemplo.
+
+#+begin_src haskell
+ex3 :: Client
+ex3 = Customer "José" "Silva" False
+
+name ex3 == "José"
+#+end_src
+
+* Exercícios
+
+** Exercício
+
+- Desenvolva uma função para calcular a área de formas geométricas descritas pelo tipo ~Shape~.
+
+** Exercício
+
+- Desenvolva funções para calcular o número de elementos e o número de folhas de uma árvore de tipo ~IntTree~.
+
+** Exercício
+
+- Desenvolva uma função que a partir de uma lista de clientes, retorne uma lista contendo todos os clientes que desejam receber mensagens de ofertas.
