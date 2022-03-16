@@ -58,14 +58,6 @@
 
 - A soma consiste em \(n + (n - 1) + ... + 1 + 0\)
 
-** Exemplo
-
-- Executando
-
-#+begin_src  haskell
-  sumUpTo 10
-#+end_src
-
 * Objetivos
 
 ** Objetivos
@@ -209,7 +201,7 @@
 ** Atendimento
 
 - Atendimento usando Google Meet será feito às quartas-feiras de 16:00h às 17:00h
-  utilizando o seguinte [[][link]].
+  utilizando o seguinte link: meet.google.com/sed-xfis-mcw
 
 ** Finalizando
 
@@ -319,10 +311,6 @@
   map greet ["Carlos", "Pedro"]
 #+end_src
 
-** Exemplo
-
-- Construa uma versão de ~greet~ que receba dois argumentos.
-  - A versão anterior possui apenas um argumentos.
 
 * Por que Haskell?
 
@@ -418,7 +406,7 @@ readFile :: FilePath -> IO String
 
 ** Interpretador
 
-- Parentesis servem para separar subexpressões.
+- Parêntesis servem para separar subexpressões.
   - ~sum (replicate 3 1)~: um argumento para ~sum~.
   - ~sum replicate 3 1~: três argumentos para ~sum~.
 - O primeiro exemplo é aceito, o segundo é um erro de tipo pois ~sum~ recebe somente um argumento.
