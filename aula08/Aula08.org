@@ -1,523 +1,452 @@
 #+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
 #+OPTIONS: tex t
 #+OPTIONS: timestamp:nil
-#+PROPERTY: tangle Aula08.hs
+#+PROPERTY: tangle Aula09.hs
 #+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
 #+REVEAL_THEME: white
 #+REVEAL_HLEVEL: 1
 #+REVEAL_ROOT: file:///users/rodrigo/reveal.js
 
-#+Title: Estudo de caso: árvores binárias
+#+Title: Classes de tipos
 #+Author:  Programação Funcional
 
 * Objetivos
 
 ** Objetivos
 
-- Implementar algoritmos clássicos sobre árvores binárias de busca.
+- Apresentar o conceito de classes de tipos.
+- Apresentar os conceitos de polimorfismo paramétrico e de sobrecarga.
 
-- Implementar funções de ordem superior sobre árvores binárias de busca.
-
-** Setup inicial
-
-#+begin_src haskell :tangle yes :exports code :results output
-{-# LANGUAGE StandaloneDeriving #-}
-module Aula08 where
-
-deriving instance Eq a   => Eq (Tree a)
-deriving instance Ord a  => Ord (Tree a)
-deriving instance Show a => Show (Tree a)
-#+end_src
-
-* Árvores binárias
-
-** Árvores binárias
-
-- Definição do tipo de dados de árvores binárias.
-
-#+begin_src haskell :tangle yes :exports code :results output  
-data Tree a = Leaf
-            | Node a (Tree a) (Tree a)
-#+end_src 
-
-** Árvores Binárias
-
-- Exemplo de uma árvore.
+** Setup
 
 #+begin_src haskell :tangle yes :exports code :results output
-ex1 :: Tree Int
-ex1 = Node 2 (Node 1 Leaf Leaf)
-             (Node 3 Leaf Leaf)
+{-# LANGUAGE InstanceSigs #-}
+module Aula09 where
 #+end_src
 
-* Busca
+* Anteriormente...
 
-** Busca 
+** Anteriormente...
 
-- Primeira funcionalidade: Buscar um elemento em uma árvore de busca.
-
-- Definir o tipo da função
+- Polimorfismo paramérico: funções funcionam de maneira uniforme para todos os tipos.
 
 #+begin_src haskell
-memberTree :: Ord a => a -> Tree a -> Bool
+reverse :: [a] -> [a]
+fst :: (a,b) -> a
 #+end_src
 
-** Busca
+** Anteriormente...
 
-- Enumerar os casos
+- Sobrecarga: funções que operam de forma diferente sobre diferentes tipos.
+  - Não são definidas para todos os tipos.
+- Exemplos:
 
 #+begin_src haskell
-memberTree :: Ord a => a -> Tree a -> Bool
-memberTree _ Leaf         = _
-memberTree x (Node y l r) = _
+elem :: Eq a => a -> [a] -> Bool
+(+)  :: Num a => a -> a -> a
 #+end_src
 
-** Busca
+* Classes de tipos
 
-- Implementar os casos base.
+** Classes de tipos
+
+- Nome inicia com letra maiúscula.
+- Define uma variável de tipo que representa o tipo a ser sobrecarregado.
+- Cada classe define um ou mais funções que devem ser implementadas por suas instâncias.
+
+** Exemplo
 
 #+begin_src haskell
-memberTree :: Ord a => a -> Tree a -> Bool
-memberTree _ Leaf         = False
-memberTree x (Node y l r) = _
+class Eq a where
+   (==) :: a -> a -> Bool
+   (/=) :: a -> a -> Bool
 #+end_src
 
-** Busca
+** Instâncias
 
-- Implementar os casos recursivos.
+- Similares a declaração de classes.
+
+- Variáveis são substituída por tipos concretos.
+
+- Assinaturas de tipos devem ser substituídas por implementações das funções para o tipo em questão.
+
+** Exemplo
+
+#+begin_src haskell
+instance Eq Bool where
+   True  == True  = True
+   False == False = True
+   _     == _     = False
+
+   x /= y = not (x == y)
+#+end_src
+
+** Exemplo
 
 #+begin_src haskell :tangle yes :exports code :results output
-memberTree :: Ord a => a -> Tree a -> Bool
-memberTree _ Leaf = False
-memberTree x (Node y l r)
-      = case compare x y of
-           LT -> memberTree x l
-           GT -> memberTree x r
-           _  -> True
+data Point = Point Int Int
+
+instance Eq Point where
+   (Point x y) == (Point x' y') =
+      x == x' && y == y'
+   x /= y = not (x == y)
 #+end_src
 
-* Inserção
+** Exemplo
 
-** Inserção
-
-- Inserção de árvores binárias.
-
-- Definir o tipo da função
-
-#+begin_src haskell
-insertTree :: Ord a => a -> Tree a -> Tree a
-#+end_src
-
-** Inserção
-
-- Inserção de árvores binárias.
-
-- Enumerar os casos
-
-#+begin_src haskell
-insertTree :: Ord a => a -> Tree a -> Tree a
-insertTree x Leaf         = _
-insertTree x (Node y l r) = _
-#+end_src
-
-** Inserção
-
-- Definir o caso base.
-
-#+begin_src haskell
-insertTree :: Ord a => a -> Tree a -> Tree a
-insertTree x Leaf         = Node x Leaf Leaf
-insertTree x (Node y l r) = _
-#+end_src
-
-** Inserção
-
-- Definir os casos recursivos
-
-#+begin_src haskell :tangle yes :exports code :results output  
-insertTree :: Ord a => a -> Tree a -> Tree a
-insertTree x Leaf = Node x Leaf Leaf
-insertTree x (Node y l r)
-  = case compare x y of
-      LT -> Node y (insertTree x l) r
-      GT -> Node y l (insertTree x r)
-      _  -> Node y l r
-#+end_src
-
-* Conversão em listas
-
-** Conversão em listas
-
-- Convertendo em uma lista ordenada.
-
-- Definindo o tipo.
-
-#+begin_src haskell
-toList :: Tree a -> [a]
-#+end_src
-
-** Conversão em listas
-
-- Convertendo em uma lista ordenada.
-
-- Enumerando os casos
-
-#+begin_src haskell
-toList :: Tree a -> [a]
-toList Leaf         = _
-toList (Node x l r) = _
-#+end_src
-
-
-** Conversão em listas
-
-- Convertendo em uma lista ordenada.
-
-- Definindo o caso base.
-
-#+begin_src haskell
-toList :: Tree a -> [a]
-toList Leaf         = []
-toList (Node x l r) = _
-#+end_src
-
-
-** Conversão em listas
-
-- Convertendo em uma lista ordenada.
-
-- Passo 4. Definindo o caso recursivo.
-
-#+begin_src haskell 
-toList :: Tree a -> [a]
-toList Leaf = []
-toList (Node x l r) = toList l ++ [x] ++ toList r
-#+end_src
-
-** Conversão em listas
-
-- Ineficiente... chamadas excessivas à concatenação de listas.
-
-- Idéia melhor: uso de um acumulador.
-
-** Conversão em listas
-
-- Definindo os casos.
-
-#+begin_src haskell
-toList :: Tree a -> [a]
-toList t = toList' t []
-   where
-     toList' Leaf ac         = _
-     toList' (Node x l r) ac = _
-#+end_src
-
-** Conversão em listas
-
-- Definindo o caso base: retornar o acumulador.
-
-#+begin_src haskell
-toList :: Tree a -> [a]
-toList t = toList' t []
-   where
-     toList' Leaf ac         = ac
-     toList' (Node x l r) ac = _
-#+end_src
-
-** Conversão em listas
-
-- Definindo o caso recursivo.
-
-- Acumulador da árvore esquerda, deve possuir o resultado da árvore direita e o valor do nó atual.
-
-** Conversão em listas
-
-- Solução:
+- Só podemos usar uma função sobrecarregada se essa possuir implementação para um certo tipo.
 
 #+begin_src haskell :tangle yes :exports code :results output
-toList :: Tree a -> [a]
-toList t = toList' t []
-   where
-     toList' Leaf ac = ac
-     toList' (Node x l r) ac
-        = toList' l (x : toList' r ac)
+data Vec3 = Vec3 Int Int Int
 #+end_src
 
-* Convertendo para árvores
+#+begin_src haskell
+Prelude*> (Vec3 0 1 1) == (Vec3 0 1 1)
+No instance for (Eq Vec3)
+#+end_src
 
-** Convertendo para árvores
+** Assinaturas em instâncias
 
-- Simples:
+- Por padrão, não podemos anotar tipos em instâncias.
+
+- A extensão ~InstanceSigs~ habilita essa possibilidade.
+
+** Exemplo
 
 #+begin_src haskell :tangle yes :exports code :results output
-fromList :: Ord a => [a] -> Tree a
-fromList = foldr insertTree Leaf
+data BoolPair = BoolPair Bool Bool
+
+instance Eq BoolPair where
+   (==) :: BoolPair -> BoolPair -> Bool
+   (BoolPair b1 b2) == (BoolPair b1' b2')
+      = b1 == b1' && b2 == b2'
+   (/=) :: BoolPair -> BoolPair -> Bool
+   b1 /= b2 = not (b1 == b2)
 #+end_src
 
-** Sort for free!
+** Instâncias recursivas
 
-- Conversão de listas/árvores fornece um algoritmo de ordenação.
+- Instâncias sobre tipos polimórficos podem depender da existência de instâncias sobre seus parâmetros.
 
-- Materialização do pior caso do Quicksort.
+** Exemplo
+
+#+begin_src haskell
+instance Eq a => Eq [a] where
+   []       == []         = True
+   (x : xs) == (y : ys)   = x == y && xs == ys
+   _        == _          = False
+
+   xs /= ys = not (xs == ys)
+#+end_src
+
+
+** Superclasses
+
+- Classes podem exigir que todas suas instâncias possuam instâncias de outras classes.
+
+- Nesse caso, dizemos que a primeira é uma subclasse da segunda. Ex: Ord é subclasse de Eq.
+
+#+begin_src haskell
+class Eq a => Ord a where
+  (<), (>), (>=), (<=) :: a -> a -> Bool
+  max, min :: a -> a -> a
+#+end_src
+
+** Significado de ~=>~
+
+- Em um tipo, restringe um tipo polimórfico.
+
+#+begin_src haskell
+elem :: Eq a => a -> [a] -> Bool
+#+end_src
+
+- Tipo ~a~ deve ser uma instância de ~Eq~.
+
+
+** Significado de ~=>~
+
+- Em classes, define uma relação de subclasses.
+
+#+begin_src haskell
+class Eq a => Ord a where
+#+end_src
+
+- Todo tipo instância de ~Ord~ deve possuir uma instância de ~Eq~
+
+** Significado de ~=>~
+
+- Em uma instância, define um requisito para a instância definida.
+
+#+begin_src haskell
+instance Eq a => Eq [a] where
+#+end_src
+
+- Especifica que para usar a igualdade sobre listas, devemos possuir a igualdade sobre elementos.
+
+** Definições ~default~
+
+- Diversas instâncias de ~Eq~ possuem a mesma implementação de ~(/=)~:
+
+#+begin_src haskell
+x /= y = not (x == y)
+#+end_src
+
+- Tais definições padrão podem ser incluídas na declaração da classe.
+
+** Exemplo
+
+#+begin_src haskell
+class Eq a where
+   (==) :: a -> a -> Bool
+   (/=) :: a -> a -> Bool
+
+   x /= y = not (x == y)
+   x == y = not (x /= y)
+#+end_src
+
+** Derivação automática
+
+- O compilador de Haskell é capaz de produzir, automaticamente, definições de algumas funções sobrecarregadas.
+
+- Exemplos: Eq, Ord, Show, Enum, etc...
+
+** Derivação automática
+
+- A declaração seguinte gera implementações padrão de instâncias de Eq, Ord e Show para o tipo Point2D:
 
 #+begin_src haskell :tangle yes :exports code :results output
-treeSort :: Ord a => [a] -> [a]
-treeSort = toList . fromList
+data Point2D
+   = Point2D Int Int
+     deriving (Eq, Ord, Show)
 #+end_src
 
-** Remoção
+** Definindo uma classe
 
-- Mostramos como inserir e procurar elementos em uma árvore.
-
-- Porém, como remover um elemento preservando os invariantes da árvore?
-
-** Remoção
-
-- Definir o tipo
-
-#+begin_src haskell
-remove :: Ord a => a -> Tree a -> Tree a
-#+end_src
-
-** Remoção
-
-- Enumerar os casos
-
-#+begin_src haskell 
-remove :: Ord a => a -> Tree a -> Tree a
-remove _ Leaf         = _
-remove v (Node x l r) = _
-#+end_src
-
-** Remoção
-
-- Definir o caso base.
-
-#+begin_src haskell 
-remove :: Ord a => a -> Tree a -> Tree a
-remove _ Leaf         = Leaf
-remove v (Node x l r) = _
-#+end_src
-
-** Remoção
-
-- Definir o caso recursivo.
-
-#+begin_src haskell 
-remove :: Ord a => a -> Tree a -> Tree a
-remove _ Leaf = Leaf
-remove v (Node x l r)
-   | v == x    = _
-   | v < x     = Node x (remove v l) r
-   | otherwise = Node x l (remove v r)
-#+end_src
-
-** Remoção
-
-- Só podemos remover valores em uma "folha", i.e., sem subárvores.
-
-- Mas como remover um valor presente em um nó interno?
-
-** Remoção
-
-- Removendo valor de um nó interno.
-  - Substituir um do nó interno por um que preserva os invariantes da árvore.
-- Qual valor preserva o invariante?
-  - Possibilidades: Maior valor da subárvore esquerda ou menor da subárvore direita.
-
-** Remoção
-
-- Obtendo menor valor e removendo da árvore.
-
-- Definindo o tipo.
-
-#+begin_src haskell
-removeMin :: Ord a => Tree a -> Maybe (a,Tree a)
-#+end_src
-
-** Remoção
-
-- Obtendo menor valor e removendo da árvore.
-
-- Enumerando os casos.
-
-#+begin_src haskell
-removeMin :: Ord a => Tree a -> Maybe (a,Tree a)
-removeMin Leaf         = _
-removeMin (Node x l r) = _
-#+end_src
-
-** Remoção
-
-- Obtendo menor valor e removendo da árvore.
-
-- Definindo o caso base.
-
-#+begin_src haskell
-removeMin :: Ord a => Tree a -> Maybe (a,Tree a)
-removeMin Leaf = Nothing
-removeMin (Node x l r) = _
-#+end_src
-
-** Remoção
-
-- Obtendo menor valor e o removendo da árvore.
-
-- Definindo o caso recursivo.
-
-#+begin_src haskell :tangle yes :exports code :results output  
-removeMin :: Ord a => Tree a -> Maybe (a,Tree a)
-removeMin Leaf = Nothing
-removeMin (Node x Leaf r) = Just (x, r)
-removeMin (Node x l r)
-   = case removeMin l of
-       Nothing -> Nothing
-       Just (y,l') -> Just (y, Node x l' r)
-#+end_src 
-
-** Remoção
-
-- Removendo de um nó interno.
-  - Se o nó não possui uma das subárvores, o resultado é a outra árvore.
-  - Caso contrário, devemos substituir o valor atual por um elemento já presente na árvore.
-
-** Remoção
-
-- Implementaremos essa lógica em outra função
+- Operação para realizar scaling de formas e vetores.
 
 #+begin_src haskell :tangle yes :exports code :results output
-removeEq :: Ord a => Tree a -> Tree a -> Tree a
-removeEq Leaf r = r
-removeEq l Leaf = l
-removeEq l r
-     = case removeMin l of
-         Nothing -> error "Impossible!"
-         Just (x,l') -> Node x l' r
+data Vector
+   = Vector Float Float
+     deriving (Eq, Ord, Show)
+
+data Shape
+   = Rectangle Vector Float Float
+   | Circle Vector Float
+   deriving (Eq, Ord, Show)
 #+end_src
 
-** Remoção
 
-- Implementação final.
+** Definindo uma classe
 
-#+begin_src haskell :tangle yes :exports code :results output  
-remove :: Ord a => a -> Tree a -> Tree a
-remove _ Leaf = Leaf
-remove v (Node x l r)
-  = case compare v x of
-      EQ -> removeEq l r
-      LT -> Node x (remove v l) r
-      GT -> Node x l (remove v r)
-#+end_src
-
-* Função ~map~
-
-** Função map
-
-- Definir o tipo da função
-
-#+begin_src haskell
-mapTree :: (a -> b) -> Tree a -> Tree b
-#+end_src 
-
-** Função map
-
-- Enumerar os casos
-
-#+begin_src haskell
-mapTree :: (a -> b) -> Tree a -> Tree b
-mapTree _ Leaf         = _
-mapTree f (Node x l r) = _
-#+end_src
-
-** Função map
-
-- Definir o caso base
-
-#+begin_src haskell 
-mapTree :: (a -> b) -> Tree a -> Tree b
-mapTree _ Leaf         = Leaf
-mapTree f (Node x l r) = _
-#+end_src
-
-** Função map
-
-- Definir o caso recursivo
+- Operação para realizar scaling de formas e vetores.
 
 #+begin_src haskell :tangle yes :exports code :results output
-mapTree :: (a -> b) -> Tree a -> Tree b
-mapTree _ Leaf = Leaf
-mapTree f (Node x l r)
-      = Node (f x) (mapTree f l)
-                   (mapTree f r)
+class Scale a where
+   scale :: Float -> a -> a
 #+end_src
 
-* Função ~fold~
+** Definindo instâncias
 
-** Função fold
-
-- Definir o tipo da função
-
-#+begin_src haskell
-foldTree :: (a -> b -> b -> b) -> b -> Tree a -> b
-#+end_src
-
-** Função fold
-
-- Porquê uma função de 3 parâmetros?
-  - 1o parâmetro: elemento da árvore.
-  - 2o parâmetro: acumulador da sub-árvore esquerda.
-  - 3o parâmetro: acumulador da sub-árvore direita.
-
-** Função fold
-
-- Enumerar os casos
-
-#+begin_src haskell
-foldTree :: (a -> b -> b -> b) -> b -> Tree a -> b
-foldTree _ v Leaf         = _
-foldTree f v (Node x l r) = _
-#+end_src
-
-** Função fold
-
-- Definir o caso base.
-
-#+begin_src haskell
-foldTree :: (a -> b -> b -> b) -> b -> Tree a -> b
-foldTree _ v Leaf         = v
-foldTree f v (Node x l r) = _
-#+end_src
-
-** Função fold
-
-- Definir o caso recursivo.
+- Instância para Vector.
 
 #+begin_src haskell :tangle yes :exports code :results output
-foldTree :: (a -> b -> b -> b) -> b -> Tree a -> b
-foldTree _ v Leaf = v
-foldTree f v (Node x l r)
-      =  f x (foldTree f v l)
-             (foldTree f v r)
+instance Scale Vector where
+   scale s v@(Vector x y)
+      = Vector (x * s') (y * s')
+        where
+         s' = s / norm v
+         norm (Vector a b) = sqrt (a^2 + b^2)
 #+end_src
 
-* Altura
 
-** Altura
+** Definindo instâncias
 
-- Definindo a altura em termos de foldTree.
+- Instâncias para Shape.
 
 #+begin_src haskell :tangle yes :exports code :results output
-height :: Tree a -> Int
-height = foldTree (\ _ acl acr -> 1 + max acl acr) 0
+instance Scale Shape where
+   scale s (Circle p r)      = Circle p (s * r)
+   scale s (Rectangle p w h) = Rectangle p (s * w) (s * h)
 #+end_src
+
+** Funções sobre Scalable
+
+- Podemos definir código que funciona para qualquer tipo Scalable.
+
+#+begin_src haskell :tangle yes :exports code :results output
+double :: Scale a => a -> a
+double s = scale 2.0 s
+#+end_src
+
+** Mais instâncias
+
+- Podemos definir instâncias sobre coleções.
+
+#+begin_src haskell :tangle yes :exports code :results output
+instance Scale a => Scale [a] where
+   scale s = map (scale s)
+#+end_src
+
+** Tipos númericos
+
+- Constantes numéricas são sobrecarregadas.
+
+#+begin_src haskell
+Prelude*>:t 3
+3 :: Num a => a
+#+end_src
+
+** Tipos numéricos
+
+- Como ~3~ é sobrecarregado, podemos usá-lo como qualquer tipo instância de ~Num~:
+
+#+begin_src haskell
+Prelude*> :t 3 :: Int
+3 :: Int
+
+Prelude*> :t 3 :: Float
+3 :: Float
+
+Prelude*> :t 3 :: Rational
+3 % 1 :: Rational
+#+end_src
+
+** Tipos Numéricos
+
+- Definidos pela classe Num:
+
+#+begin_src haskell
+class Num a where
+   fromInteger :: Integer -> a
+   (+), (*), (-) :: a -> a -> a
+   abs, signum :: a -> a
+#+end_src
+
+** Tipos Numéricos
+
+- Sobrecarga de valores numéricos é feita pela função ~fromInteger~.
+
+- Isto é, ~3 :: Int~ é, na verdade, ~fromInteger 3~.
+
+- Isso permite a sobrecarga de valores quaisquer como números e expressões numéricas.
+
+** Exemplo
+
+- Expressões aritméticas
+
+#+begin_src haskell :tangle yes :exports code :results output
+data Exp
+  = Const Int
+  | Exp :+: Exp
+  | Exp :-: Exp
+  | Exp :*: Exp
+  | Abs Exp
+  | Sign Exp
+  deriving (Eq, Ord, Show)
+#+end_src
+
+** Exemplo
+
+#+begin_src haskell :tangle yes :exports code :results output
+ex :: Exp
+ex = Const 1 :+: Const 1
+#+end_src
+
+** Exemplo
+
+- instância de ~Num~:
+
+#+begin_src haskell :tangle yes :exports code :results output
+instance Num Exp where
+  fromInteger = Const . fromInteger
+  (+) = (:+:)
+  (-) = (:-:)
+  (*) = (:*:)
+  abs = Abs
+  signum = Sign
+#+end_src
+
+** Exemplo
+
+- Podemos usar a instância de ~Num~ para escrever expressões usando operadores de Haskell.
+
+#+begin_src haskell :tangle yes :exports code :results output
+ex1 :: Exp
+ex1 = 1 + 1
+#+end_src
+
+#+begin_src haskell
+*Aula10> ex1
+Const 1 :+: Const 1
+#+end_src
+
+** Intervalos
+
+- Sintaxe de intervalos usada em listas é, na verdade, uma operação sobrecarregada.
+
+- A lista ~[n..m]~ é uma abreviação para ~enumFromTo n m~.
+
+#+begin_src haskell
+enumFromTo :: Enum a => a -> a -> [a]
+#+end_src
+
+Essa função é definida na classe ~Enum~
+
+** Intervalos
+
+#+begin_src haskell
+enumFrom :: Enum a => a -> [a]
+#+end_src
+
+- A função ~enumFrom~ produz uma lista sem especificar um
+limite superior, logo o resultado pode ser uma lista infinita.
+
+#+begin_src haskell
+Prelude*> take 5 [0..]
+[0,1,2,3,4]
+#+end_src
+
+** Intervalos
+
+#+begin_src haskell
+enumFromThenTo :: Enum a => a -> a -> a -> [a]
+#+end_src
+
+- A função ~enumFromThenTo~ produz uma lista em que cada elemento adjacente possui a mesma "distância".
+
+#+begin_src haskell
+[1.0, 1.2 .. 2.0]
+[1.0,1.2,1.4,1.5999999999999999,1.7999999999999998,1.9999999999999998]
+#+end_src
+
+** Derivação automática
+
+- Instâncias de Enum podem ser calculadas automaticamente para enumerações.
+
+#+begin_src haskell :tangle yes :exports code :results output
+data Direction
+   = North | South | East | West
+     deriving (Eq, Ord, Show, Enum)
+#+end_src
+
 
 * Exercícios
 
-** Exercício
+** Exercícios
 
-- Implemente a função mapTree usando foldTree.
+- Implemente uma instância de Eq para o tipo ~Vec3~.
 
-** Exercício
+- Implemente uma instância de Eq para o tipo ~Person~ que considere duas pessoas iguais se essas possuírem o mesmo nome.
 
-- Implemente uma função que calcula o número de elementos presente em uma árvore usando foldTree.
+#+begin_src haskell :tangle yes :exports code :results output
+data Person
+  = Person {
+      name :: String
+    , age  :: Int
+    }
+#+end_src
+
+** Exercícios
+
+- Implemente uma instância de Show para ~Person~ de forma que o resultado da conversão para string de um valor de tipo ~Person~ exiba apenas o campo name deste registro.
 

@@ -1,0 +1,523 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Extra02.hs
+#+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title: Estudo de caso: árvores binárias
+#+Author:  Programação Funcional
+
+* Objetivos
+
+** Objetivos
+
+- Implementar algoritmos clássicos sobre árvores binárias de busca.
+
+- Implementar funções de ordem superior sobre árvores binárias de busca.
+
+** Setup inicial
+
+#+begin_src haskell :tangle yes :exports code :results output
+{-# LANGUAGE StandaloneDeriving #-}
+module Aula08 where
+
+deriving instance Eq a   => Eq (Tree a)
+deriving instance Ord a  => Ord (Tree a)
+deriving instance Show a => Show (Tree a)
+#+end_src
+
+* Árvores binárias
+
+** Árvores binárias
+
+- Definição do tipo de dados de árvores binárias.
+
+#+begin_src haskell :tangle yes :exports code :results output  
+data Tree a = Leaf
+            | Node a (Tree a) (Tree a)
+#+end_src 
+
+** Árvores Binárias
+
+- Exemplo de uma árvore.
+
+#+begin_src haskell :tangle yes :exports code :results output
+ex1 :: Tree Int
+ex1 = Node 2 (Node 1 Leaf Leaf)
+             (Node 3 Leaf Leaf)
+#+end_src
+
+* Busca
+
+** Busca 
+
+- Primeira funcionalidade: Buscar um elemento em uma árvore de busca.
+
+- Definir o tipo da função
+
+#+begin_src haskell
+memberTree :: Ord a => a -> Tree a -> Bool
+#+end_src
+
+** Busca
+
+- Enumerar os casos
+
+#+begin_src haskell
+memberTree :: Ord a => a -> Tree a -> Bool
+memberTree _ Leaf         = _
+memberTree x (Node y l r) = _
+#+end_src
+
+** Busca
+
+- Implementar os casos base.
+
+#+begin_src haskell
+memberTree :: Ord a => a -> Tree a -> Bool
+memberTree _ Leaf         = False
+memberTree x (Node y l r) = _
+#+end_src
+
+** Busca
+
+- Implementar os casos recursivos.
+
+#+begin_src haskell :tangle yes :exports code :results output
+memberTree :: Ord a => a -> Tree a -> Bool
+memberTree _ Leaf = False
+memberTree x (Node y l r)
+      = case compare x y of
+           LT -> memberTree x l
+           GT -> memberTree x r
+           _  -> True
+#+end_src
+
+* Inserção
+
+** Inserção
+
+- Inserção de árvores binárias.
+
+- Definir o tipo da função
+
+#+begin_src haskell
+insertTree :: Ord a => a -> Tree a -> Tree a
+#+end_src
+
+** Inserção
+
+- Inserção de árvores binárias.
+
+- Enumerar os casos
+
+#+begin_src haskell
+insertTree :: Ord a => a -> Tree a -> Tree a
+insertTree x Leaf         = _
+insertTree x (Node y l r) = _
+#+end_src
+
+** Inserção
+
+- Definir o caso base.
+
+#+begin_src haskell
+insertTree :: Ord a => a -> Tree a -> Tree a
+insertTree x Leaf         = Node x Leaf Leaf
+insertTree x (Node y l r) = _
+#+end_src
+
+** Inserção
+
+- Definir os casos recursivos
+
+#+begin_src haskell :tangle yes :exports code :results output  
+insertTree :: Ord a => a -> Tree a -> Tree a
+insertTree x Leaf = Node x Leaf Leaf
+insertTree x (Node y l r)
+  = case compare x y of
+      LT -> Node y (insertTree x l) r
+      GT -> Node y l (insertTree x r)
+      _  -> Node y l r
+#+end_src
+
+* Conversão em listas
+
+** Conversão em listas
+
+- Convertendo em uma lista ordenada.
+
+- Definindo o tipo.
+
+#+begin_src haskell
+toList :: Tree a -> [a]
+#+end_src
+
+** Conversão em listas
+
+- Convertendo em uma lista ordenada.
+
+- Enumerando os casos
+
+#+begin_src haskell
+toList :: Tree a -> [a]
+toList Leaf         = _
+toList (Node x l r) = _
+#+end_src
+
+
+** Conversão em listas
+
+- Convertendo em uma lista ordenada.
+
+- Definindo o caso base.
+
+#+begin_src haskell
+toList :: Tree a -> [a]
+toList Leaf         = []
+toList (Node x l r) = _
+#+end_src
+
+
+** Conversão em listas
+
+- Convertendo em uma lista ordenada.
+
+- Passo 4. Definindo o caso recursivo.
+
+#+begin_src haskell 
+toList :: Tree a -> [a]
+toList Leaf = []
+toList (Node x l r) = toList l ++ [x] ++ toList r
+#+end_src
+
+** Conversão em listas
+
+- Ineficiente... chamadas excessivas à concatenação de listas.
+
+- Idéia melhor: uso de um acumulador.
+
+** Conversão em listas
+
+- Definindo os casos.
+
+#+begin_src haskell
+toList :: Tree a -> [a]
+toList t = toList' t []
+   where
+     toList' Leaf ac         = _
+     toList' (Node x l r) ac = _
+#+end_src
+
+** Conversão em listas
+
+- Definindo o caso base: retornar o acumulador.
+
+#+begin_src haskell
+toList :: Tree a -> [a]
+toList t = toList' t []
+   where
+     toList' Leaf ac         = ac
+     toList' (Node x l r) ac = _
+#+end_src
+
+** Conversão em listas
+
+- Definindo o caso recursivo.
+
+- Acumulador da árvore esquerda, deve possuir o resultado da árvore direita e o valor do nó atual.
+
+** Conversão em listas
+
+- Solução:
+
+#+begin_src haskell :tangle yes :exports code :results output
+toList :: Tree a -> [a]
+toList t = toList' t []
+   where
+     toList' Leaf ac = ac
+     toList' (Node x l r) ac
+        = toList' l (x : toList' r ac)
+#+end_src
+
+* Convertendo para árvores
+
+** Convertendo para árvores
+
+- Simples:
+
+#+begin_src haskell :tangle yes :exports code :results output
+fromList :: Ord a => [a] -> Tree a
+fromList = foldr insertTree Leaf
+#+end_src
+
+** Sort for free!
+
+- Conversão de listas/árvores fornece um algoritmo de ordenação.
+
+- Materialização do pior caso do Quicksort.
+
+#+begin_src haskell :tangle yes :exports code :results output
+treeSort :: Ord a => [a] -> [a]
+treeSort = toList . fromList
+#+end_src
+
+** Remoção
+
+- Mostramos como inserir e procurar elementos em uma árvore.
+
+- Porém, como remover um elemento preservando os invariantes da árvore?
+
+** Remoção
+
+- Definir o tipo
+
+#+begin_src haskell
+remove :: Ord a => a -> Tree a -> Tree a
+#+end_src
+
+** Remoção
+
+- Enumerar os casos
+
+#+begin_src haskell 
+remove :: Ord a => a -> Tree a -> Tree a
+remove _ Leaf         = _
+remove v (Node x l r) = _
+#+end_src
+
+** Remoção
+
+- Definir o caso base.
+
+#+begin_src haskell 
+remove :: Ord a => a -> Tree a -> Tree a
+remove _ Leaf         = Leaf
+remove v (Node x l r) = _
+#+end_src
+
+** Remoção
+
+- Definir o caso recursivo.
+
+#+begin_src haskell 
+remove :: Ord a => a -> Tree a -> Tree a
+remove _ Leaf = Leaf
+remove v (Node x l r)
+   | v == x    = _
+   | v < x     = Node x (remove v l) r
+   | otherwise = Node x l (remove v r)
+#+end_src
+
+** Remoção
+
+- Só podemos remover valores em uma "folha", i.e., sem subárvores.
+
+- Mas como remover um valor presente em um nó interno?
+
+** Remoção
+
+- Removendo valor de um nó interno.
+  - Substituir um do nó interno por um que preserva os invariantes da árvore.
+- Qual valor preserva o invariante?
+  - Possibilidades: Maior valor da subárvore esquerda ou menor da subárvore direita.
+
+** Remoção
+
+- Obtendo menor valor e removendo da árvore.
+
+- Definindo o tipo.
+
+#+begin_src haskell
+removeMin :: Ord a => Tree a -> Maybe (a,Tree a)
+#+end_src
+
+** Remoção
+
+- Obtendo menor valor e removendo da árvore.
+
+- Enumerando os casos.
+
+#+begin_src haskell
+removeMin :: Ord a => Tree a -> Maybe (a,Tree a)
+removeMin Leaf         = _
+removeMin (Node x l r) = _
+#+end_src
+
+** Remoção
+
+- Obtendo menor valor e removendo da árvore.
+
+- Definindo o caso base.
+
+#+begin_src haskell
+removeMin :: Ord a => Tree a -> Maybe (a,Tree a)
+removeMin Leaf = Nothing
+removeMin (Node x l r) = _
+#+end_src
+
+** Remoção
+
+- Obtendo menor valor e o removendo da árvore.
+
+- Definindo o caso recursivo.
+
+#+begin_src haskell :tangle yes :exports code :results output  
+removeMin :: Ord a => Tree a -> Maybe (a,Tree a)
+removeMin Leaf = Nothing
+removeMin (Node x Leaf r) = Just (x, r)
+removeMin (Node x l r)
+   = case removeMin l of
+       Nothing -> Nothing
+       Just (y,l') -> Just (y, Node x l' r)
+#+end_src 
+
+** Remoção
+
+- Removendo de um nó interno.
+  - Se o nó não possui uma das subárvores, o resultado é a outra árvore.
+  - Caso contrário, devemos substituir o valor atual por um elemento já presente na árvore.
+
+** Remoção
+
+- Implementaremos essa lógica em outra função
+
+#+begin_src haskell :tangle yes :exports code :results output
+removeEq :: Ord a => Tree a -> Tree a -> Tree a
+removeEq Leaf r = r
+removeEq l Leaf = l
+removeEq l r
+     = case removeMin l of
+         Nothing -> error "Impossible!"
+         Just (x,l') -> Node x l' r
+#+end_src
+
+** Remoção
+
+- Implementação final.
+
+#+begin_src haskell :tangle yes :exports code :results output  
+remove :: Ord a => a -> Tree a -> Tree a
+remove _ Leaf = Leaf
+remove v (Node x l r)
+  = case compare v x of
+      EQ -> removeEq l r
+      LT -> Node x (remove v l) r
+      GT -> Node x l (remove v r)
+#+end_src
+
+* Função ~map~
+
+** Função map
+
+- Definir o tipo da função
+
+#+begin_src haskell
+mapTree :: (a -> b) -> Tree a -> Tree b
+#+end_src 
+
+** Função map
+
+- Enumerar os casos
+
+#+begin_src haskell
+mapTree :: (a -> b) -> Tree a -> Tree b
+mapTree _ Leaf         = _
+mapTree f (Node x l r) = _
+#+end_src
+
+** Função map
+
+- Definir o caso base
+
+#+begin_src haskell 
+mapTree :: (a -> b) -> Tree a -> Tree b
+mapTree _ Leaf         = Leaf
+mapTree f (Node x l r) = _
+#+end_src
+
+** Função map
+
+- Definir o caso recursivo
+
+#+begin_src haskell :tangle yes :exports code :results output
+mapTree :: (a -> b) -> Tree a -> Tree b
+mapTree _ Leaf = Leaf
+mapTree f (Node x l r)
+      = Node (f x) (mapTree f l)
+                   (mapTree f r)
+#+end_src
+
+* Função ~fold~
+
+** Função fold
+
+- Definir o tipo da função
+
+#+begin_src haskell
+foldTree :: (a -> b -> b -> b) -> b -> Tree a -> b
+#+end_src
+
+** Função fold
+
+- Porquê uma função de 3 parâmetros?
+  - 1o parâmetro: elemento da árvore.
+  - 2o parâmetro: acumulador da sub-árvore esquerda.
+  - 3o parâmetro: acumulador da sub-árvore direita.
+
+** Função fold
+
+- Enumerar os casos
+
+#+begin_src haskell
+foldTree :: (a -> b -> b -> b) -> b -> Tree a -> b
+foldTree _ v Leaf         = _
+foldTree f v (Node x l r) = _
+#+end_src
+
+** Função fold
+
+- Definir o caso base.
+
+#+begin_src haskell
+foldTree :: (a -> b -> b -> b) -> b -> Tree a -> b
+foldTree _ v Leaf         = v
+foldTree f v (Node x l r) = _
+#+end_src
+
+** Função fold
+
+- Definir o caso recursivo.
+
+#+begin_src haskell :tangle yes :exports code :results output
+foldTree :: (a -> b -> b -> b) -> b -> Tree a -> b
+foldTree _ v Leaf = v
+foldTree f v (Node x l r)
+      =  f x (foldTree f v l)
+             (foldTree f v r)
+#+end_src
+
+* Altura
+
+** Altura
+
+- Definindo a altura em termos de foldTree.
+
+#+begin_src haskell :tangle yes :exports code :results output
+height :: Tree a -> Int
+height = foldTree (\ _ acl acr -> 1 + max acl acr) 0
+#+end_src
+
+* Exercícios
+
+** Exercício
+
+- Implemente a função mapTree usando foldTree.
+
+** Exercício
+
+- Implemente uma função que calcula o número de elementos presente em uma árvore usando foldTree.
+

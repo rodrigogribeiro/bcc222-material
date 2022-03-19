@@ -1,0 +1,765 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Extra02.hs
+#+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title: Estrutura de projetos e Testes
+#+Author:  Programação Funcional
+
+
+* Objetivos
+
+** Objetivos
+
+- Entender como construir aplicações usando o Haskell Stack
+  - Entender o mecanismo de módulos, imports e exports.
+  - Configurar dependências de um projeto
+
+** Objetivos
+    
+- Discussão sobre boas práticas.
+- Introdução aos testes baseados em propriedades.
+
+** Setup
+
+#+begin_src haskell :tangle yes :exports code :results output
+module Aula09 where
+
+import Data.Char
+import Test.Tasty
+import Test.Tasty.HUnit      as TH
+import Test.Tasty.QuickCheck as TQ
+import Test.QuickCheck
+#+end_src
+
+* Estrutura de projetos
+
+** Visão geral
+#+ATTR_HTML: :height 500px
+[[./big-picture.png]]
+
+** Pacotes e módulos
+
+- Programas Haskell são organizados em pacotes e módulos.
+
+- *Pacotes* são unidades de distribuição de código.
+    - Seu projeto pode adicioná-los como dependências.
+
+** Pacotes e módulos
+
+- Cada pacote disponibiliza um ou mais módulos.
+  - Módulos definem tipos, classes e funções que podem ser exportados (i.e. public)
+  - Você pode utilizar definições de outros módulos importando-os.
+
+** Estrutura de projetos
+
+[[./stack.png]]
+
+** Estrutura de projetos
+
+- Arquivo package.yaml
+    - Descreve dependências e outras configurações.
+- Dependências
+
+#+begin_src yaml
+dependencies:
+- base >= 4.7 && < 5
+- tasty
+- tasty-hunit
+- tasty-quickcheck
+#+end_src
+
+** Estrutura de projetos
+
+- Arquivo package.yaml
+  - Descreve dependências e outras configurações.
+
+- Definição de um executável.
+
+#+begin_src yaml
+executables:
+  aula11-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - aula09
+#+end_src
+
+** Estrutura de projetos
+
+- Criamos um novo projeto usando o stack com o comando:
+
+#+begin_src shell
+stack new my-project
+#+end_src
+
+** Estrutura de projetos
+
+- Instalamos as dependências e compilamos o projeto usando
+
+#+begin_src shell
+$> stack build
+#+end_src
+
+** Estrutura de projetos
+
+- Executamos o código (depois de compilá-lo):
+
+#+begin_src shell
+$> stack exec my-project
+#+end_src
+
+** Módulos
+
+- Programas Haskell são organizados em pacotes e módulos.
+
+** Módulos
+
+- *Pacotes* são unidades de distribuição de código.
+  - Seu projeto pode adicioná-los como dependências.
+    
+- Ex. Módulo Data.List possui funções envolvendo listas.
+
+** Módulos
+
+- Nome do arquivo corresponde ao nome do módulo.
+  - Prefixos correspondem à estrutura de diretórios.
+  - Ex. My.Long.ModuleName deve ser o arquivo
+
+#+begin_src shell
+My/Long/ModuleName.hs (ou .lhs)
+#+end_src
+
+** Importanto código
+
+- ~import Data.List~
+  - Importa toda função, tipo e classes definidas no módulo.
+
+- ~import Data.List (nub, permutations)~
+  - Importa somente as definições presentes na lista.
+
+** Importanto código
+
+- ~import Data.List hiding (nub)~
+  - Importa todas as definições *exceto* as presentes na lista.
+
+- ~import qualified Data.List as L~
+  - Importa todas as definições do módulo
+  - Definições devem usar o qualificador ~L~.
+  - Ex. ~L.nub~
+
+** Exportando código
+
+- Módulos podem especificar uma lista de definições que serão visíveis quando da importação.
+
+** Exportando código
+
+- Não especificar a lista de exports: todas definições públicas.
+  - Problema: Dificulta manutenção.
+  - Melhor abordagem: representação de tipos "oculta", mas não temos casamento de padrão.
+
+* Mantendo invariantes
+
+** Mantendo invariantes
+
+- Módulos são úteis para garantir invariantes na representação de tipos.
+
+** Mantendo invariantes
+
+- Exemplo: Representando nomes
+
+#+begin_src haskell :tangle yes :exports code :results output  
+data Name = MkName String deriving Eq
+#+end_src
+
+** Mantendo invariantes
+
+- Invariante: Nomes deve ter como primeiro caractere uma letra maiúscula e demais minúsculas.
+
+** Mantendo invariantes
+
+- Como manter esse invariante?
+  - Primeiro: não expor estrutura do tipo.
+
+#+begin_src haskell
+module Name ( Name    -- exporta tipo e não construtores
+            , mkName  -- mkName :: String -> Name
+            , render  -- render :: Name -> String
+            )
+#+end_src
+
+** Mantendo invariantes
+
+- Função `mkName` impõe o invariante.
+
+#+begin_src haskell :tangle yes :exports code :results output  
+mkName :: String -> Name
+mkName []       = MkName []
+mkName (x : xs) = MkName (x' : xs')
+  where
+     x'  = toUpper x
+     xs' = map toLower xs
+#+end_src
+
+* Testes
+
+** Testes
+
+- Testes são um componente importante de qualquer desenvolvimento de software.
+
+** Testes
+
+- Forma mais utilizada para garantia de qualidade de software.
+
+** Testes
+
+- Porém, testes podem mostrar somente a presença de **bugs** e não sua ausência.
+
+** Correção de programas
+
+- Um software é correto se ele atende sua especificação.
+
+- Veremos posteriormente na disciplina como especificar e validar funcionais.
+
+** Testes
+
+- Forma mais comum: teste de unidade.
+
+- Validar o valor retornado por uma função de acordo com um resultado esperado.
+
+- Para isso, usaremos a biblioteca HUnit para construir testes unitários em Haskell
+
+** Testes
+
+- Testando a função ~mkName~:
+
+#+begin_src haskell :tangle yes :exports code :results output
+render :: Name -> String
+render (MkName s) = s
+#+end_src
+
+** Testes
+
+- Exemplo de teste de unidade
+
+#+begin_src haskell :tangle yes :exports code :results output  
+mkNameTest :: TestTree
+mkNameTest
+  = testCase "MkName Test" (s @?= "Maria")
+  where s = render (mkName "maria")
+#+end_src
+
+** Testes
+
+- Resultado da execução do teste ao executar o comando ~stack exec aula09-exe~:
+
+#+begin_src shell 
+Testes
+  Testes de unidade
+    MkName Test: OK
+
+All 1 tests passed (0.00s)
+#+end_src
+
+** Testes
+
+- Testes de unidade são interessantes para uma melhor compreensão de uma tarefa.
+
+- Porém, são limitados pela criatividade do programador.
+  - No nosso exemplo, testamos apenas um caso...
+
+** Testes
+
+- Nos testes de unidade é responsabilidade do programador relacionar a entrada para uma função e o resultado esperado.
+
+** Testes
+
+- Como entradas são escritas manualmente pelo programador, casos problemáticos podem ser "ignorados".
+
+** Testes
+
+- Como resolver esse dilema?
+
+** Testes
+
+- O ideal seria automatizar a geração de casos de teste (entradas).
+
+** Testes
+
+- Porém, como garantir que o valor retornado pela função sob teste é o esperado?
+  - Descrevendo uma propriedade que caracteriza um resultado correto.
+
+** Testes
+
+- Essa abordagem para testes é conhecida como testes baseados em propriedades.
+
+- Disponível para Haskell pela biblioteca QuickCheck.
+  - Versões disponíveis para outras linguagens.
+
+** Testes
+
+- Ingredientes do QuickCheck
+   - Propriedades: Funções que retornam valores booleanos.
+   - Geradores de casos de teste: Definidos usando uma classe de tipos
+
+** Testes
+
+- QuickCheck possui uma ampla biblioteca de funções para construir geradores de casos de teste.
+
+** Testes
+
+- Qual propriedade especifica a correção do tipo ~Name~?
+  - Nomes devem iniciar com letra minúscula.
+
+#+begin_src haskell :tangle yes :exports code :result output
+startsWithUpper :: String -> Bool
+startsWithUpper [] = True
+startsWithUpper (c : _) = isUpper c
+
+nameCorrect :: String -> Bool
+nameCorrect s = startsWithUpper (render (mkName s))
+#+end_src
+
+** Testes
+
+- Como o Quickcheck testa uma propriedade?
+  - Geradores de casos de teste geram entradas aleatórias.
+  - Propriedades validam se a implementação está ou não correta.
+  - Caso a propriedade retorne "falso", a entrada gerada é apresentada como um contra-exemplo.
+
+** Testes
+
+- Como executar um teste?
+    - Basta executar uma propriedade usando a função ~quickCheck~.
+
+** Testes
+
+- Executando o teste obtemos:
+
+#+begin_src haskell
+quickCheck nameCorrect
+ Failed! Falsified (after 4 tests and 3 shrinks):
+"1"
+#+end_src
+
+- A string ~1~ é apresentada como um contra-exemplo.
+
+** Testes
+
+- Ao executarmos no interpretador:
+
+#+begin_src haskell
+nameCorrect "1"
+False
+#+end_src
+
+- Podemos corrigir o problema por fazer o teste para strings formadas apenas por letras
+
+** Testes
+
+- Corrigindo a propriedade:
+
+#+begin_src haskell :tangle yes :exports code :results output
+implies :: Bool -> Bool -> Bool
+implies x y = not x || y
+
+nameCorrectFixed :: String -> Bool
+nameCorrectFixed s = (all isLetter s) `implies` b
+   where
+     b  = startsWithUpper s'
+     s' = render (mkName s)
+#+end_src
+
+** Testes
+
+- Agora executando os testes, obtemos sucesso:
+
+#+begin_src shell
+$> quickCheck nameCorrect
++++ OK, passed 100 tests.
+#+end_src
+
+* Estudo de caso
+
+** Estudo de caso
+
+- Nesta aula, veremos como usar o QuickCheck para especificar e descobrir falhas em um algoritmo de ordenação.
+
+- Vamos considerar o algoritmo insertion sort.
+
+** Estudo de caso
+
+- Implementação com um bug...
+
+#+begin_src haskell :tangle yes :exports code :results output
+sort1 :: [Int] -> [Int]
+sort1 []       = []
+sort1 (x : xs) = insert1 x xs
+
+insert1 :: Int -> [Int] -> [Int]
+insert1 x [] = [x]
+insert1 x (y : ys)
+      | x <= y    = x : ys
+      | otherwise = y : insert1 x ys
+#+end_src
+
+** Estudo de caso
+
+- Primeiro passo: devemos especificar uma propriedade satisfeita por um algoritmo de ordenação.
+
+** Estudo de caso
+
+- A propriedade deve diferenciar a ordenação de outras funções sobre listas.
+
+** Estudo de caso
+
+- A propridade não deve ser atrelada a um algoritmo específico de ordenação.
+
+** Estudo de caso
+
+- Idealmente, um algoritmo de ordenação não deveria alterar o tamanho de uma lista.
+
+#+begin_src haskell :tangle yes :exports code :results output
+sortPreservesLength :: [Int] -> Bool
+#+end_src
+
+#+begin_src haskell
+sortPreservesLength xs
+      = length (sort xs) == length xs
+#+end_src
+
+** Estudo de caso
+
+- Podemos executar o teste executando no interpretador:
+
+#+begin_src shell
+$> quickCheck sortPreservesLength
+  Failed! Falsified (after 5 tests and 5 shrinks):
+[0,0]
+#+end_src
+
+** Estudo de caso
+
+- Quickcheck retorna um **contra-exemplo** para a propriedade.
+  - Podemos usar o contra-exemplo para descobrir a falha em nossa implementação.
+
+** Estudo de caso
+
+- Qual equação não preserva o tamanho?
+
+#+begin_src haskell
+sort1 :: [Int] -> [Int]
+sort1 [] = []
+sort1 (x : xs) = insert1 x xs
+
+insert1 :: Int -> [Int] -> [Int]
+insert1 x [] = [x]
+insert1 x (y : ys)
+      | x <= y    = x : ys
+      | otherwise = y : insert1 x ys
+#+end_src
+
+** Estudo de caso 
+
+- Corrigindo...
+
+#+begin_src haskell :tangle yes :export code :results output
+insert :: Int -> [Int] -> [Int]
+insert x [] = [x]
+insert x (y : ys)
+      | x <= y    = x : y : ys
+      | otherwise = y : insert x ys
+#+end_src
+
+** Estudo de caso
+
+- Testes passando!
+
+#+begin_src haskell
+quickCheck sortPreservesLength
++++ OK, passed 100 tests.
+#+end_Src
+
+- Mas será que isso é suficiente?
+
+** Estudo de caso
+
+- Definição de preserves.
+
+#+begin_src haskell :tangle yes :exports code :results output
+preserves :: Eq b => (a -> a) -> (a -> b) -> a -> Bool
+(f `preserves` p) x = p x == p (f x)
+#+end_src
+
+** Estudo de caso
+
+- Propriedades
+
+#+begin_src haskell :tangle yes :exports code :results output
+sortPreservesLength = sort `preserves` length
+
+idPreservesLength :: [Int] -> Bool
+idPreservesLength = id `preserves` length
+#+end_src
+
+** Estudo de caso
+
+- Executando o teste...
+
+#+begin_src shell
+quickCheck idPreservesLength
++++ OK, passed 100 tests.
+#+end_src
+
+** Estudo de caso
+
+- Verificamos que ~id~ também preserva o tamanho de listas
+  - Logo, preservar o tamanho não é uma boa propriedade...
+
+** Estudo de caso
+
+- Que propriedade faz sentido?
+- Um algoritmo de ordenação deve...
+  - Ordenar uma lista!
+
+** Estudo de caso
+
+- Propriedades sobre ordenação
+
+#+begin_src haskell
+sorted :: [Int] -> Bool
+sorted []  = True
+sorted [_] = True
+sorted (x : y : ys) = x < y && sorted (y : ys)
+#+end_src
+
+#+begin_src haskell :tangle yes :exports code :results output
+sortEnsuresSorted :: [Int] -> Bool
+sortEnsuresSorted = sorted . sort
+#+end_src
+
+** Estudo de caso
+
+- Executando o teste obtemos:
+
+#+begin_src shell
+$> quickCheck sortEnsuresSorted
+   Failed! Falsified (after 7 tests and 7 shrinks):
+[0,0,-1]
+#+end_src
+
+- Ainda não foi desta vez...
+
+** Estudo de caso
+
+- Onde está o bug desta vez?
+
+#+begin_src haskell
+sort1 :: [Int] -> [Int]
+sort1 [] = []
+sort1 (x : xs) = insert1 x xs
+#+end_src
+
+** Estudo de caso
+
+- Não chamamos ~sort1~ recursivamente sobre a cauda...
+
+#+begin_src haskell
+sort1 :: [Int] -> [Int]
+sort1 [] = []
+sort1 (x : xs) = insert1 x xs
+#+end_src
+
+** Estudo de caso
+
+- Corrigindo
+
+#+begin_src haskell
+sort2 :: [Int] -> [Int]
+sort2 [] = []
+sort2 (x : xs) = insert2 x (sort2 xs)
+#+end_src
+
+** Estudo de caso
+
+- Executando o teste...
+  - Qual o erro agora?
+
+#+begin_src shell
+$> quickCheck sortEnsuresSorted
+Failed! Falsified (after 5 tests and 1 shrink):
+[3,3]
+#+end_src
+
+** Estudo de caso
+
+- Depurando...
+  - O erro está na especificação de lista ordenada.
+
+#+begin_src shell
+$> sort2 [3,3]
+[3,3]
+$> sorted [3,3]
+False
+#+end_src
+
+** Estudo de caso
+
+- Onde está o erro?
+
+#+begin_src haskell 
+sorted :: [Int] -> Bool
+sorted []  = True
+sorted [_] = True
+sorted (x : y : ys) = x < y && sorted (y : ys)
+#+end_src
+
+
+** Estudo de caso
+
+- Corrigindo...
+
+#+begin_src haskell :tangle yes :exports code :results output
+sorted :: [Int] -> Bool
+sorted []  = True
+sorted [_] = True
+sorted (x : y : ys) = x <= y && sorted (y : ys)
+#+end_src
+
+** Estudo de caso
+
+- Resultado
+
+#+begin_src shell
+$> quickCheck sortEnsuresSorted
++++ OK, passed 100 tests.
+#+end_src
+
+** Estudo de caso
+
+- Ordenação é completamente especificada por...
+  - Preservar tamanho
+  - Resultado deve ser uma lista ordenada.
+
+** Estudo de caso
+
+- Na verdade, não...
+  - A função a seguir satisfaz a especificação anterior...
+
+#+begin_src haskell :tangle yes :exports code :results output
+evilSort :: [Int] -> [Int]
+evilSort xs = replicate (length xs) 1
+#+end_src
+
+** Estudo de caso
+
+- A especificação completa deve considerar que a lista retornada é uma permutação da original.
+
+#+begin_src haskell :tangle yes :exports code :results output
+permutes :: ([Int] -> [Int]) -> [Int] -> Bool
+permutes f xs =  all (flip elem xs) (f xs)
+#+end_src
+
+** Estudo de caso
+
+- Definindo a propriedade de permutação
+
+#+begin_src haskell :tangle yes :exports code :results output
+sortPermutes :: [Int] -> Bool
+sortPermutes xs = sort `permutes` xs
+#+end_src
+
+* Finalizando
+
+** Finalizando
+
+- Nesta aula vimos detalhes sobre o sistema de módulos e pacotes de Haskell.
+
+** Finalizando
+
+- Abordamos o problema de teste e apresentamos duas abordagens para teste: teste de unidade e o teste baseado em propriedades.
+
+* Exercícios
+
+** Exercícios
+
+- Desenvolva a função
+
+#+begin_src haskell :tangle yes :exports code :results output
+inRange :: Int -> Int -> [Int] -> [Int]
+inRange = undefined
+#+end_src
+
+que retorna os elementos de uma lista pertencentes
+ao intervalo especificado pelos dois primeiros parâmetros
+de inRange.
+
+** Exercícios
+
+Sua implementação deve atender os testes a seguir:
+
+#+begin_src haskell :tangle yes :exports code :results output
+inRangeUnit :: TestTree
+inRangeUnit
+   = testCase "inRage test" $
+       inRange 2 5 [1..10] @?= [2,3,4,5]
+#+end_src
+
+** Exercícios
+
+- Descreva uma propriedade que especifique o resultado esperado por sua implementação de ~inRange~.
+
+#+begin_src haskell :tangle yes :exports code :results output
+inRangeProperty :: Int -> Int -> [Int] -> Bool
+inRangeProperty _ _ _ = True
+#+end_src
+
+* Código adicional
+
+** Código adicional
+
+#+begin_src haskell :tangle yes :exports code :results output
+properties :: TestTree
+properties
+    = testGroup "Propriedades"
+         [
+            TQ.testProperty "sort preserves length"
+               sortPreservesLength
+         ,  TQ.testProperty "id preserves length"
+               idPreservesLength
+         ,  TQ.testProperty "sort ensures sorting"
+               sortEnsuresSorted
+         ,  TQ.testProperty "sort permutes input"
+               sortPermutes
+         ,  TQ.testProperty "evil sort ensures sorting"
+               (sorted . evilSort)
+         ,  TQ.testProperty "inRange specification"
+               inRangeProperty
+         ]
+
+unitTests :: TestTree
+unitTests = testGroup "Testes de unidade"
+                      [
+                        mkNameTest
+                      , inRangeUnit
+                      ]
+
+tests :: TestTree
+tests = testGroup "Testes" [unitTests, properties]
+
+
+main :: IO ()
+main = defaultMain tests
+
+sort :: [Int] -> [Int]
+sort [] = []
+sort (x : xs) = insert x (sort xs)
+#+end_src
