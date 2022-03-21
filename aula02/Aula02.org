@@ -25,11 +25,6 @@
 
 - Sintaxe baseada em layout e comentários.
 
-** Objetivos
-
-- Noções sobre tipos em Haskell
-  - Conceitos sobre polimorfismo.
-
 * Definindo funções
 
 ** Definindo funções
@@ -106,7 +101,7 @@ median x y = (x + y) / 2
 
 ** Definindo funções
 
-- Exemplo: Defina uma função que receba 3 números inteiros e retorne seu produto.
+- Exemplo: Defina uma função que receba 3 números inteiros e retorne sua soma.
 
 #+begin_src haskell :tangle yes :exports code :results output
 sum3 :: Int -> Int -> Int -> Int
@@ -132,11 +127,11 @@ sum3 x y z = x + y + z
 
 - Exemplos
 
-#+begin_src haskell :tangle no :exports none :results output
+#+begin_src haskell 
 1 : [2]
 #+end_src
 
-#+begin_src haskell :tangle no :exports none :results output
+#+begin_src haskell 
 1 : (2 : [3, 4])
 #+end_src
 
@@ -151,12 +146,15 @@ sum3 x y z = x + y + z
 ** Listas
 
 - Tipos dos construtores de listas
-  - ~[]  :: [a]~
-  - ~(:) :: a -> [a] -> [a]~ 
+
+#+begin_src haskell
+[]  :: [a]
+(:) :: a -> [a] -> [a]
+#+end_src
 
 ** Listas
 
-- O tipo do operador ~:~
+- O tipo do operador :
 
 #+begin_example
 (:) :: a -> [a] -> [a]
@@ -177,15 +175,15 @@ sum3 x y z = x + y + z
 
 - Exemplos
 
-#+begin_src haskell :tangle no :exports none :results output
+#+begin_src haskell
 null [1,2,3]
 #+end_src
 
-#+begin_src haskell :tangle no :exports none :results output
+#+begin_src haskell
 head [1,2,3]
 #+end_src
 
-#+begin_src haskell :tangle no :exports none :results output
+#+begin_src haskell 
 tail [1,2,3]
 #+end_src
 
@@ -195,11 +193,11 @@ tail [1,2,3]
   - ~head~ lança um erro ao ser chamada sobre a lista vazia.
   - ~tail~ lança um erro ao ser chamada sobre a lista vazia. 
 
-#+begin_src haskell :tangle no :exports none :results output
+#+begin_src haskell 
 head []
 #+end_src
 
-#+begin_src haskell :tangle no :exports none :results output
+#+begin_src haskell 
 tail []
 #+end_src
 
@@ -233,7 +231,7 @@ head :: [a] -> a
   - Argumento: ~[a]~
   - Resultado: ~[a]~
 
-#+begin_src haskell :tangle no :exports none
+#+begin_src haskell 
 tail :: [a] -> [a]
 #+end_src
 
@@ -272,9 +270,9 @@ dist (x1,y1) (x2,y2)
   - Tuplas podem possuir elementos de tipos diferentes.
   - Listas são sempre homogêneas.
 
-#+begin_example
+#+begin_src haskell
 (True , "abc", 2) :: (Bool, String, Int)
-#+end_example
+#+end_src
 
 * Condicionais
 
@@ -314,7 +312,7 @@ signal2 :: Int -> Int
 signal2 n
   | n < 0 = -1
   | n == 0 = 0
-    | otherwise = 1
+  | otherwise = 1
 #+end_src
 
 ** Condicionais

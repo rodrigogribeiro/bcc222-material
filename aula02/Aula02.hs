@@ -3,7 +3,7 @@ import Prelude hiding ( replicate
                       , null
                       )
 
-average vs = sum vs `div` length vs
+average vs = sum vs `div` length ns
 
 add1 :: Int -> Int
 add1 x = x + 1
@@ -35,7 +35,7 @@ signal2 :: Int -> Int
 signal2 n
   | n < 0 = -1
   | n == 0 = 0
-    | otherwise = 1
+  | otherwise = 1
 
 dist1 :: (Float,Float) -> (Float,Float) -> Float
 dist1 (x1,y1) (x2,y2)
