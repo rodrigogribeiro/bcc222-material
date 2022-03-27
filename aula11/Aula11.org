@@ -1,0 +1,522 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Aula10.hs
+#+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title: I/O em Haskell
+#+Author: Programação Funcional
+
+* Objetivos
+
+** Objetivos
+
+- Discutir a diferença entre código /puro/ e /impuro/
+
+- Interagir com o ambiente externo em Haskell
+
+- Introduzir a notação *do*
+
+* Programas interativos
+
+** Programas interativos
+
+- No princípio, programas eram /batch/: executados isoladamente, produziam resultado sem interação com seu ambiente de execução.
+
+** Programas interativos
+
+- Programas atuais são interativos: respondem a comandos do usuário e a entradas provenientes de seu ambiente: rede, sensores, etc...
+
+** Programas interativos
+
+- Como representar isso em Haskell?
+
+* Transparência referencial
+
+** Transparência referencial
+
+- Haskell possui **transparência referencial**
+
+- Sempre é possível substituir um termo por sua definição sem alterar seu significado.
+  - Em linguagem imperativas, isso não é sempre verdade.
+
+** Transparência referencial
+
+- Considere a expressão
+
+#+begin_src haskell
+reverse xs ++ xs
+   where
+     xs = filter p ys
+#+end_src
+
+- Esta é sempre igual a
+
+#+begin_src haskell
+reverse (filter p ys) ++ filter p ys.
+#+end_src
+
+** Transparência referencial
+
+- Transparência referencial...
+  - Separa o *significado* de uma expressão da forma como essa é executada.
+
+- Compilador é livre para escolher a melhor forma para executar o código.
+
+- Paralelismo torna-se muito mais simples.
+
+** Transparência referencial
+
+- Interação com ambiente externo não possui transparência referencial.
+
+- A função getChar lê um caractere da entrada padrão.
+
+** Transparência referencial
+
+- A função getChar é uma função impura pois não retorna o mesmo resultado a cada execução. Logo, a seguinte expressão não é verdadeira:
+
+#+begin_src haskell
+getChar == getChar
+#+end_src
+
+** Transparência referencial
+
+- *Efeitos colaterais* quebram a transparência referencial
+- Exemplos de efeitos colaterais:
+    - Impressão no console.
+    - Leitura / escrita de arquivos.
+    - Comunicação com BDs e rede.
+    - Atribuição.
+
+** Transparência referencial
+
+- Efeitos colaterais podem alterar o "mundo-externo"
+    - Como não podemos "duplicar" o ambiente de execução, não podemos substituir termos por sua definição.
+
+** Transparência referencial
+
+- Problemas com código que possui efeitos colaterais.
+    - Dificuldade para testar.
+    - Dificuldade para paralelização e distribuição.
+
+** Transparência referencial
+
+- Porém, a grande maioria de programas precisa de efeitos colaterais.
+    - Em linguagens imperativas não há controle sobre como e onde efeitos podem ocorrer.
+
+** Transparência referencial
+
+- Como podemos melhorar isso?
+    - Impondo que efeitos colaterais só podem acontecer em certas partes de seu código.
+
+** Transparência referencial
+
+- Como isolar efeitos colaterais?
+    - Isolamos efeitos colaterais confinando-os em funções que usam / retornam valores do tipo do efeito.
+- Para entrada e saída em Haskell, o tipo é IO a.
+
+* Modelando IO
+
+** Modelando IO
+
+- Funções de tipo IO podem:
+    - Realizar uma operação de IO.
+    - Retornar um resultado.
+- O tipo IO deve ser dependente de uma representação do mundo "externo".
+
+** Modelando IO
+
+- Uma possível representação de IO.
+
+#+begin_src haskell
+type IO a = World -> (a, World)
+#+end_src
+
+- =World= é o tipo que representa o mundo externo.
+
+** Modelando IO
+
+
+- O tipo IO recebe um valor World e retona um resultado de tipo a e um valor possivelmente modificado de `World`.
+- Modificação: reflete a realização de um efeito de IO no valor World de entrada.
+
+#+begin_src haskell
+type IO a = World -> (a, World)
+#+end_src
+
+** Modelando IO
+
+- A função =getChar= retorna u  caractere lido da entrada padrão.
+
+#+begin_src haskell
+getChar :: IO Char
+#+end_src
+
+** Modelando IO
+
+- A função =putChar= imprime o caractere passado como argumento na entrada padrão.
+  - O tipo =()= corresponde ao tipo =void= em linguagens imperativas.
+    
+#+begin_src haskell
+putChar :: Char -> IO ()
+#+end_src
+
+** Modelando IO
+
+- Problema: Temos primitivas, mas como combiná-las?
+
+- Precisamos de um operador que sequencia operações de IO.
+    - Note que a ordem de execução de IO é importante.
+
+** Modelando IO
+
+- Precisamos de uma função para combinar expressões de IO.
+
+- Essa função já é definida da biblioteca de Haskell e é chamada de `bind`:
+
+#+begin_src haskell
+(>>=) :: IO a -> (a -> IO b) -> IO b
+m >>= f = \w -> let (v,w') = m w
+                in f v w'
+#+end_src
+
+** Modelando IO
+
+- Lendo e imprimindo um caractere usando a entrada padrão.
+
+#+begin_src haskell :tangle yes :exports code :results output
+echo :: IO ()
+echo = getChar >>= \ c -> putChar c
+#+end_src
+
+** Modelando IO
+
+- Construir uma uma função que retorna um caractere digitado como uma letra maiúscula.
+
+#+begin_src haskell
+getUpper :: IO Char
+getUpper = getChar >>= \ c -> toUpper c
+#+end_src
+
+** Modelando IO
+
+- Problema:
+
+#+begin_src shell
+Couldn't match expected type IO Char
+              with actual type Char
+#+end_src
+
+Qual o motivo desse erro?
+
+** Modelando IO
+
+- Erro de tipo na expressão: =\ c -> toUpper c=.
+    - Tipo esperado: =Char -> IO Char=
+    - Tipo encontrado: =Char -> Char=
+- Como converter um valor de tipo =Char= em =IO Char=?
+
+** Modelando IO
+
+- Precisamos de mais uma primitiva para lidar com IO.
+
+#+begin_src haskell
+return :: a -> IO a
+return x = \ w -> (x, w)
+#+end_src
+
+- Atenção: =return= não muda o fluxo de execução!
+
+** Modelando IO
+
+- Corrigindo.
+
+#+begin_src haskell :tangle yes :exports code :results output
+getUpper :: IO Char
+getUpper
+  = getChar >>= \ c -> return (toUpper c)
+#+end_src
+
+** Modelando IO
+
+- Como definir uma função que lê uma string da entrada?
+
+- Definindo o tipo:
+
+#+begin_src haskell
+getLine :: IO String
+#+end_src
+
+** Modelando IO
+
+- Nota: Não podemos fazer casamento de padrão em valores do tipo =IO Char=.
+
+- Devemos usar o operador ~>>=~ e então fazer o casamento sobre o caractere passado como parâmetro para a "continuação"
+
+** Modelando IO
+
+#+begin_src haskell
+getLine :: IO String
+getLine = getChar >>= \ c ->
+    case c of
+      '\n' -> return []
+        _  -> getLine >>= \ cs ->
+                 return (c : cs)
+#+end_src
+
+- Código com (>>=) é ilegível...
+- Alguma alternativa?
+
+
+
+** do-Notation
+
+- Felizmente há uma notação para lidar com IO em Haskell.
+
+- Agrupamos código de IO em blocos iniciados com a palavra reservada `do`
+    - Operador `<-` dá um nome a um resultado de uma operação.
+
+** do-Notation
+
+- Usando do-notation
+
+#+begin_src haskell
+getLine :: IO String
+getLine
+   = do
+       c <- getChar
+       case c of
+         '\n' -> return []
+          _   -> do cs <- getLine
+                    return (c : cs)
+#+end_src
+
+** do-Notation
+
+- Equivalência entre do e >>=:
+
+#+begin_src haskell
+do x1 <- a1
+   x2 <- a2
+   ...
+   expr
+#+end_src
+
+é equivalente a
+
+#+begin_src haskell
+a1 >>= (\x1 -> a2 >>= (\x2 -> ... expr))
+#+end_src
+
+
+** do-Notation
+
+- Função para imprimir uma string no console.
+  - Regra: Sempre que possível não use o (>>=).
+
+#+begin_src haskell
+putStr :: String -> IO ()
+putStr [] = return ()
+putStr (x : xs)
+   = do
+       putChar x
+       putStr xs
+#+end_src
+
+** do-Notation
+
+- Gera uma quebra de linha após a impressão de uma string.
+
+#+begin_src haskell
+putStrLn :: String -> IO ()
+putStrLn s
+   = do
+       putStr s
+       putChar '\n'
+#+end_src
+
+** Resumo de IO
+
+#+begin_src haskell
+return :: a -> IO a
+(>>=) :: IO a -> (a -> IO b) -> IO b
+
+getChar :: IO Char
+putChar :: Char -> IO Char
+
+getLine   :: IO String
+putStr    :: String -> IO ()
+putStrLn  :: String -> IO ()
+#+end_src
+
+* Adivinhe o número
+
+** Adivinhe o número
+
+- Implementar um pequeno jogo para adivinhar um número.
+
+- Interação feita via console.
+
+** Adivinhe o número
+
+#+begin_src shell
+Escolha  número entre 1 and 100.
+O número é 75? (g = maior, l = menor, c = correto)
+l
+O número é 62? (g = maior, l = menor, c = correto)
+g
+O número é 68? (g = maior, l = menor, c = correto)
+l
+O número é  65? (g = maior, l = menor, c = correto)
+c
+Acertou!
+#+end_src
+
+** Adivinhe o número
+
+- Algoritmo para adivinhar: busca binária.
+
+#+begin_src haskell
+guess :: Int -> Int -> IO ()
+guess l u
+  = do
+      let m = (l + u) `div` 2
+      putStr ("O número é " ++ show m ++ "?")
+      putStrLn "(g = maior, l = menor, c = correto)"
+      k <- readGuess
+      case k of
+        Less -> guess l (m - 1)
+        Greater -> guess (m + 1) u
+        Equal -> putStrLn "Acertou!"
+#+end_src
+
+* First-class IO
+
+** First-class IO
+
+- Tipos IO são cidadãos de 1a classe.
+
+- Valores de tipo IO podem ser retornados como resultado, passados como argumentos e armazenados em estruturas de dados.
+
+** First-class IO
+
+- Exemplo
+
+#+begin_src haskell
+foo :: [IO ()]
+foo = map (\ n -> putStrLn ("Hello " ++ s))
+          ["João", "Maria"]
+#+end_src
+
+- Note que ao chamarmos =foo= no interpretador, obtemos uma mensagem de erro.
+
+** First-class IO
+
+- Valores de tipo IO somente são executados em blocos *do*, dentro de outros valores de tipo IO.
+
+- Como *foo* possui tipo *[IO ()]*, esse não é diretamente executável como uma operação de IO.
+
+** First-class IO
+
+- Podemos definir uma função para sequenciar ações em uma lista.
+
+- Definindo o tipo
+
+#+begin_src haskell
+sequence_ :: [IO a] -> IO ()
+#+end_src
+
+** First-class IO
+
+- Enumerando os casos
+
+#+begin_src haskell
+sequence_ :: [IO a] -> IO ()
+sequence_ [] = _
+sequence_ (a : as) = _
+#+end_src 
+
+** First-class IO
+
+- Definindo o caso base
+
+#+begin_src haskell
+sequence_ :: [IO a] -> IO ()
+sequence_ [] = return ()
+sequence_ (a : as) = _
+#+end_src
+
+** First-class IO
+
+- Definindo o caso recursivo
+
+#+begin_src haskell 
+sequence_ :: [IO a] -> IO ()
+sequence_ [] = return ()
+sequence_ (a : as)
+   = do
+       a
+       sequence_ as
+#+end_src
+
+** Exemplo
+
+- Implemente a função
+
+#+begin_src haskell
+sequence :: [IO a] -> IO [a]
+#+end_src
+
+que retorna a lista de resultados obtidos ao executar uma lista de operações de IO.
+
+** Solução
+
+#+begin_src haskell
+sequence :: [IO a] -> IO [a]
+sequence [] = return []
+sequence (a : as)
+   = do
+       x <- a
+       xs <- sequence as
+       return (x : xs)
+#+end_src
+
+** Arquivos
+
+- Funções e tipos para manipular arquivos
+
+#+begin_src haskell
+type FilePath = String
+
+readFile :: FilePath -> IO String
+writeFile :: FilePath -> String -> IO String
+#+end_src
+
+- Note que o IO é feito por /lazy evaluation/, isto é, sob demanda.
+
+** Função main
+
+- O início da execução de um programa Haskell se dá pela função
+
+#+begin_src haskell
+main :: IO ()
+main = ...
+#+end_src
+
+que deve estar contida em um arquivo chamado Main.hs ou Main.lhs
+
+** Jogo da forca
+
+- Outro exemplo, jogo da forca com base de palavras armazenadas em um arquivo de configuração.
+
+- Arquivo Hangman.hs
+
+* Exercícios
+
+** Exercícios
+
+- Implemente um programa executável que produza estatísticas sobre um arquivo fornecido como entrada. As estatísticas produzidas devem ser o número de linhas e de palavras presentes no arquivo.
+

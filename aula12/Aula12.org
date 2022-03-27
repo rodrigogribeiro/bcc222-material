@@ -1,0 +1,637 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Aula10.hs
+#+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title: Functor e Applicative
+#+Author: Programação Funcional
+
+
+* Objetivos
+
+** Objetivos
+
+- Apresentar os conceitos de functor e applicative e sua utilidade.
+
+** Setup 
+
+#+begin_src haskell :tangle yes :exports code :results output
+module Aula12 where
+#+end_src
+
+* Função =map=
+
+** Função =map= 
+
+- Pergunta: podemos definir =map= para outros tipos?
+
+#+begin_src haskell
+map :: (a -> b) -> [a] -> [b]
+map _ [] = []
+map f (x : xs) = f x : map f xs
+#+end_src
+
+** Função =map=
+
+- Tarefa: definir =map= para o tipo =Maybe=:
+
+#+begin_src haskell
+data Maybe a = Just a | Nothing
+#+end_src
+
+** Função =map=
+
+- Passo 1: Definindo o tipo
+
+#+begin_src haskell
+mapMay :: (a -> b) -> Maybe a -> Maybe b
+#+end_src
+
+** Função =map=
+
+- Passo 2: Enumerando os casos
+
+#+begin_src haskell
+mapMay :: (a -> b) -> Maybe a -> Maybe b
+mapMay _ Nothing = _
+mapMay f (Just x) = _
+#+end_src
+
+** Função =map=
+
+- Passo 3: Definindo o caso para =Nothing=:
+
+#+begin_src haskell
+mapMay :: (a -> b) -> Maybe a -> Maybe b
+mapMay _ Nothing = Nothing
+mapMay f (Just x) = _
+#+end_src
+
+** Função =map=
+
+- Passo 4: Definindo o caso para =Just=:
+
+#+begin_src haskell :tangle yes :exports code :results output
+mapMay :: (a -> b) -> Maybe a -> Maybe b
+mapMay _ Nothing = Nothing
+mapMay f (Just x) = Just (f x)
+#+end_src
+
+** Função =map=
+
+- Definir =map= para árvores binárias:
+
+#+begin_src haskell :tangle yes :exports code :results output
+data Tree a
+  = Leaf
+  | Node a (Tree a) (Tree a)
+  deriving (Eq, Ord, Show)
+#+end_src
+
+** Função =map=
+
+- Passo 1: Definindo o tipo
+
+#+begin_src haskell 
+mapTree :: (a -> b) -> Tree a -> Tree b
+#+end_src
+
+** Função =map=
+
+- Passo 2: Enumerando os casos
+
+#+begin_src haskell
+mapTree :: (a -> b) -> Tree a -> Tree b
+mapTree _ Leaf = _
+mapTree f (Node x l r) = _
+#+end_src
+
+** Função =map=
+
+- Passo 3: Definindo o caso base
+
+#+begin_src haskell
+mapTree :: (a -> b) -> Tree a -> Tree b
+mapTree _ Leaf = Leaf
+mapTree f (Node x l r) = _
+#+end_src
+
+** Função =map=
+
+- Passo 4: Definindo o caso recursivo
+
+#+begin_src haskell :tangle yes :results output :exports code
+mapTree :: (a -> b) -> Tree a -> Tree b
+mapTree _ Leaf = Leaf
+mapTree f (Node x l r)
+   = Node (f x) (mapTree f l) (mapTree f r)
+#+end_src
+
+** Função =map=
+
+- Observe o tipo das funções definidas:
+
+#+begin_src haskell
+mapMay  :: (a -> b) -> Maybe a -> Maybe b
+mapTree :: (a -> b) -> Tree a  -> Tree b
+#+end_src
+
+- Qual o padrão?
+
+** Função =map=
+
+- Podemos generalizar o tipo das duas funções para
+
+#+begin_src haskell
+fmap :: (a -> b) -> f a -> f b
+#+end_src
+
+em que, f = Maybe para =mapMay= e f = Tree para =mapTree=.
+
+** Kinds
+
+- Considere as seguintes funções:
+
+#+begin_src haskell
+foo :: Int -> Maybe
+foo x = Nothing
+
+baz :: String -> Tree
+baz s = Leaf
+#+end_src
+
+Este código está correto? Será aceito pelo compilador?
+
+** Kind
+
+- O GHC nos responde:
+
+#+begin_src shell
+ • Expecting one more argument to ‘Maybe’
+     Expected a type, but ‘Maybe’ has kind ‘* -> *’
+ • In the type ‘(String -> Maybe)’
+#+end_src
+
+** Kinds
+
+- Intuitivamente, kinds são tipos de "tipos".
+    - Tipos simples como Bool, String, Int, [Int] são de kind *.
+    - Construtores de tipos como Maybe e Tree possuem kind * -> *.
+
+** Kinds
+
+- Tipos como Maybe e Tree são funções a nível de tipos.
+    - Precisam de um parâmetro de tipo para serem tipos efetivamente.
+
+- Podemos consultar o kind de um tipo usando o comando `:k` no ghci.
+
+** Exemplos
+
+#+begin_src haskell
+Prelude*> :k Int
+Int :: *
+Prelude*> :k []
+[] :: * -> *
+Prelude*> :k (,)
+(,) :: * -> * -> *
+Prelude*> :k Either
+Either :: * -> * -> *
+#+end_src
+
+** Exemplos
+
+- Qual o kind de =GRose=?
+
+#+begin_src haskell :tangle yes :exports code :results output
+data GRose f a = a :> f (GRose f a)
+#+end_src
+
+** Exemplos
+
+- Qual o kind de GRose?
+
+** Exemplos
+
+- Qual o kind de GRose?
+
+#+begin_src haskell
+Prelude*> :k GRose
+GRose :: (* -> *) -> * -> *
+#+end_src
+
+* Functor
+
+** Functor
+
+- Tipos de kind * -> * e que possuem uma função similar a map são chamados de functores.
+
+#+begin_src haskell
+class Functor f where
+   fmap :: (a -> b) -> f a -> f b
+
+(<$>) :: (a -> b) -> f a -> f b
+(<$>) = fmap
+#+end_src
+
+** Functor
+
+- Instância para =Maybe=
+
+#+begin_src haskell
+instance Functor Maybe where
+  fmap _ Nothing = Nothing
+  fmap f (Just x) = Just (f x)
+#+end_src
+
+** Functor
+
+- Instância para Tree
+
+#+begin_src haskell :tangle yes :exports code :results output
+instance Functor Tree where
+  fmap _ Leaf = Leaf
+  fmap f (Node x l r)
+    = Node (f x) (f <$> l) (f <$> r)
+#+end_src
+
+** Árvores
+
+- Apresente a definição de Functor para o tipo:
+
+#+begin_src haskell :tangle yes :exports code :results output
+data Rose a
+  = Rose a [Rose a]
+    deriving (Eq, Ord, Show)
+#+end_src
+
+
+** Functor
+
+- Instância para =Rose=
+
+#+begin_src haskell :tangle yes :exports code :results output
+instance Functor Rose where
+  fmap f (Rose x ts)
+    = Rose (f x) ((fmap f) <$> ts)
+#+end_src
+
+** Functor
+
+- Idealmente, functores devem atender as seguintes propriedades:
+
+#+begin_src haskell
+fmap id == id
+fmap (g . f) == fmap g . fmap f
+#+end_src 
+
+- Veremos como provar esse tipo de propriedades nas próximas aulas.
+
+* Applicative
+
+** Tarefa
+
+- Validar entradas de e-mails em um formulário.
+    - Email: deve conter o caractere =@=.
+    - Corpo: String não vazia.
+
+** Modelagem
+
+#+begin_src haskell :tangle yes :exports code :results output
+type From = Address
+type To = Address
+
+data Address
+   = Address String
+     deriving (Eq, Ord, Show)
+data Body
+   = Body String
+     deriving (Eq, Ord, Show)
+
+data Email
+   = Email From To Body
+     deriving (Eq, Ord, Show)
+#+end_src
+
+
+** Validação
+
+- Testando se a string é vazia.
+
+#+begin_src haskell :tangle yes :exports code :results output
+nonEmpty :: String -> Maybe String
+nonEmpty [] = Nothing
+nonEmpty s  = Just s
+#+end_src
+
+** Validação
+
+- Testando se uma string contém =@=:
+
+#+begin_src haskell :tangle yes :exports code :results output
+contains :: Char -> String -> Maybe String
+contains x xs
+  | x `elem` xs = Just xs
+  | otherwise   = Nothing
+#+end_src
+
+** Validação
+
+- Validando um endereço de e-mail
+     - Vamos usar a instância de Functor para Maybe!
+
+#+begin_src haskell :tangle yes :exports code :results output
+mkAddress :: String -> Maybe Address
+mkAddress s = Address <$> contains '@' s
+#+end_src
+
+** Validação
+
+- Validando o corpo do e-mail
+
+#+begin_src haskell :tangle yes :exports code :results output
+mkBody :: String -> Maybe Body
+mkBody s = Body <$> nonEmpty s
+#+end_src
+
+** Validação
+
+- Validando o e-mail.
+
+#+begin_src haskell :tangle yes :exports code :results output
+mkEmail :: String -> String -> String -> Maybe Email
+mkEmail from to body
+   = case mkAddress from of
+       Nothing -> Nothing
+       Just fromAddr ->
+         case mkAddress to of
+           Nothing -> Nothing
+           Just toAddr ->
+             case mkBody body of
+               Nothing -> Nothing
+               Just nBody ->
+                   Just (Email fromAddr toAddr nBody)
+#+end_src
+
+** Validação
+
+- Código anterior de =mkEmail= é repleto de repetição.
+
+- Lógica real de =mkEmail= poderia ser resumida em:
+
+#+begin_src haskell
+mkEmail from to body
+   = Email (mkAddress from)
+           (mkAddress to)
+           (mkBody body)
+#+end_src
+
+** Validação
+
+- O tipo de =Email= é:
+
+#+begin_src haskell 
+Email :: Address -> Address -> Body -> Email
+#+end_src
+
+Porém, os resultados de =mkAddress= e =mkBody= envolvem o tipo =Maybe=.
+
+** Validação
+
+- Idealmente, deveríamos ser capazes de transformar
+
+#+begin_src haskell 
+Email :: Address -> Address -> Body -> Email
+#+end_src
+
+em
+
+#+begin_src haskell 
+Email :: Maybe Address ->
+         Maybe Address ->
+         Maybe Body -> Maybe Email
+#+end_src
+
+** Validação
+
+- Note que a diferença entre os tipos
+
+#+begin_src haskell
+Email :: Address -> Address -> Body -> Email
+Email :: Maybe Address ->
+         Maybe Address ->
+         Maybe Body -> Maybe Email
+#+end_src
+
+pode ser resolvida por "inserir" a função =Email= em valores de tipo =Maybe=.
+
+** Functores Aplicativos
+
+- A abstração de functor aplicativo permite a aplicação de uma função sobre valores contidos em uma "estrutura" de construtor de tipos.
+
+#+begin_src haskell
+class Functor f => Applicative f where
+   pure  :: a -> f a
+   (<*>) :: f (a -> b) -> f a -> f b
+#+end_src
+
+** Applicative Maybe
+
+#+begin_src haskell
+instance Applicative Maybe where
+    pure                  = Just
+
+    Nothing  <*> _        = Nothing
+    _        <*> Nothing  = Nothing
+    (Just f) <*> (Just x) = Just (f x)
+#+end_src
+
+
+** Applicative
+
+- O operador =<*>= permite a aplicação de funções sobre construtores de tipos.
+
+- Exemplo
+
+#+begin_src haskell
+foo :: Maybe Int
+foo = (+) <$> (Just 2) <*> (Just 3)
+
+Prelude*> foo
+Just 5
+#+end_src
+
+** Applicative
+
+- Qual o tipo de =(+) <$>= ?
+
+- Lembrando os tipos individuais:
+
+#+begin_src haskell
+(+)   :: Num c     => c        -> c   -> c
+(<$>) :: Functor f => (a -> b) -> f a -> f b
+#+end_src
+
+** Applicative
+
+- Note que basta fazer a = c e b = c -> c.
+- Com isso, temos:
+
+#+begin_src haskell
+(+) <$> :: (Num c, Functor f) => f c -> f (c -> c)
+#+end_src
+
+Isso representa que ao aplicarmos essa expressão a um valor de tipo f c, o resultado terá tipo f (c -> c).
+
+** Applicative
+
+- Dessa forma, temos que =(+) <$> (Just 2)= possui o tipo
+
+#+begin_src haskell
+(+) <$> (Just 2):: (Num c, Functor f) => f (c -> c)
+#+end_src
+
+** Applicative
+
+- Note que podemos combinar a expressão `(+) <$> (Just 2)` com `Just 3` usando o operador `<*>`, cujo tipo é:
+
+#+begin_src haskell
+(<*>) :: Applicative f => f (a -> b) -> f a -> f b
+
+(+) <$> (Just 2) <*> (Just 3) :: Maybe Int
+#+end_src
+
+** Validação
+
+- Usando funções de Applicative, a implementação de mkEmail fica:
+
+#+begin_src haskell :tangle yes :exports code :results output
+mkEmail' :: String -> String -> String -> Maybe Email
+mkEmail' from to body
+   = Email <$> mkAddress from <*>
+               mkAddress to   <*>
+               mkBody body
+#+end_src
+
+** Validação
+
+- O que fizemos para validar e-mails esta ok...
+    - Porém, qual foi a causa da falha?
+    - Não há como saber!
+
+** Validação
+
+- Idealmente, devíamos armazenar erros obtidos durante a validação para exibí-los ao usuário.
+
+- Usaremos um conjunto de tipos e funções para esse fim.
+
+** Validação
+
+- Definindo um tipo para validadores.
+
+#+begin_src haskell :tangle yes :exports code :results output
+data Validation err a
+   = Failure err
+   | Success a
+   deriving (Eq, Ord, Show)
+#+end_src
+
+** Validação
+
+- Validation é um Functor
+
+#+begin_src haskell :tangle yes :exports code :results output
+instance Functor (Validation err) where
+   fmap _ (Failure err) = Failure err
+   fmap f (Success x)   = Success (f x)
+#+end_src
+
+** Validação
+
+- Próximo passo: Definir uma instância de Applicative de forma a combinar as falhas.
+
+- Pergunta: Como combinar falhas?
+    - Usaremos outra abstração: a de semi-grupo!
+
+** Semi-grupo
+
+- Um semi-grupo é uma estrutura algébrica que é formada por um conjunto e uma operação binária associativa.
+
+- Em Haskell, é uma classe de tipos que possui uma função binária que deve ser associativa.
+
+** Semi-grupo
+
+- Definição de Semigroup
+
+#+begin_src haskell
+class Semigroup a where
+   (<>) :: a -> a -> a
+#+end_src
+
+** Semi-grupo
+
+- Vamos exigir, na instância de Applicative, que a variável err em =Validation err a= seja uma instância de =Semigroup=.
+
+** Applicative
+
+#+begin_src haskell :tangle yes :exports code :results output
+instance Semigroup err => Applicative (Validation err) where
+  pure = Success
+  Failure e1 <*> b = Failure $ case b of
+    Failure e2 -> e1 <> e2
+    Success _ -> e1
+  Success _  <*> Failure e2 =
+    Failure e2
+  Success f  <*> Success a  =
+    Success (f a)
+#+end_src
+
+** Erros
+
+#+begin_src haskell :tangle yes :exports code :results output
+data Error
+  = MustNotBeEmpty
+  | MustContain String
+  deriving (Eq, Ord, Show)
+#+end_src
+
+** Validação
+
+#+begin_src haskell :tangle yes :exports code :results output
+atString :: String -> Validation [Error] Address
+atString s
+   | '@' `elem` s = Success (Address s)
+   | otherwise    = Failure [MustContain "@"]
+
+nonEmptyString :: String -> Validation [Error] Body
+nonEmptyString [] = Failure [MustNotBeEmpty]
+nonEmptyString s  = Success (Body s)
+#+end_src
+
+
+** Validação
+
+#+begin_src haskell :tangle yes :exports code :results output
+email :: String -> String ->
+         String -> Validation [Error] Email
+email from to body = Email <$> atString from <*>
+                               atString to   <*>
+                               nonEmptyString body
+#+end_src 
+
+
+* Exercícios
+
+** Exercícios
+
+- Qual o kind do tipo a seguir? Apresente uma instância de Functor para esse tipo.
+
+#+begin_src haskell
+data Toy a b =
+    Output a b
+  | Bell b
+  | Done
+#+end_src

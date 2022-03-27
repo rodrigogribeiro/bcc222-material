@@ -176,11 +176,11 @@ sum3 x y z = x + y + z
 - Exemplos
 
 #+begin_src haskell
-null [1,2,3]
+null []
 #+end_src
 
 #+begin_src haskell
-head [1,2,3]
+head []
 #+end_src
 
 #+begin_src haskell 

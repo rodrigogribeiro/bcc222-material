@@ -1,0 +1,427 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Aula10.hs
+#+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title:Avaliação sob demanda
+#+Author: Programação Funcional
+
+
+* Objetivos
+
+** Objetivos
+
+- Entender a estratégia de avaliação sob demanda
+- Entender porque a avaliação sob demanda é útil
+- Entender como evitar problemas de eficiência.
+
+** Setup
+
+#+begin_src haskell :tangle yes :exports code :results output
+module Aula 10 where
+#+end_src
+
+* Estratégias de avaliação
+
+** Estratégias de avaliação
+
+- Considere a seguinte função simples.
+
+#+begin_src haskell :tangle yes :exports code :results output
+square :: Integer -> Integer
+square n = n * n
+#+end_src
+
+** Estratégias de avaliação
+
+- Exemplo
+
+#+begin_src haskell
+square (1 + 2)
+= -- some magic
+9
+#+end_src
+
+** Estratégias de avaliação
+
+- A estratégia de avaliação estrita
+  - Avaliar os argumentos antes de /chamar/ uma função.
+
+#+begin_src haskell
+square (1 + 2)
+=
+square 3
+=
+3 * 3
+=
+9
+#+end_src
+
+** Estratégias de avaliação
+
+- Avaliação não estrita
+  - Argumentos são substituídos no corpo da função
+
+#+begin_src haskell
+square (1 + 2)
+= -- substituir no corpo
+(1 + 2) * (1 + 2)
+= -- avaliar primeira expressão
+3 * (1 + 2)
+= -- avaliar a segunda
+3 * 3
+=
+9
+#+end_src
+
+** Estratégias de avaliação
+
+- Observando os exemplos, faz sentido considerar a avaliação não estrita?
+
+** Estratégias de avaliação
+
+- No caso da função /square/, avaliação não estrita é *sempre* pior.
+
+** Estratégias de avaliação
+
+- Mas, isso é verdade para todas as funções?
+
+** Estratégias de avaliação
+
+- Considere a função a seguir
+
+#+begin_src haskell
+const :: a -> b -> a
+const x _ = x
+#+end_src
+
+** Estratégias de avaliação
+
+- e a seguinte expressão...
+
+#+begin_src haskell
+const 5 (1 + 3)
+#+end_src
+
+** Estratégias de avaliação
+
+- Considerando avaliação estrita, temos:
+
+#+begin_src haskell 
+const 5 (1 + 3)
+=
+const 5 4
+=
+5
+#+end_src
+
+
+** Estratégias de avaliação
+
+- Considerando avaliação não estrita, temos:
+
+#+begin_src haskell 
+const 5 (1 + 3)
+=
+5
+#+end_src
+
+** Estratégias de avaliação
+
+- Uma forma de melhorar a eficiência da avaliação não estrita é realizar o /compartilhamento de resultados/.
+
+** Estratégias de avaliação
+
+- Ao invés de calcular ~(1 + 3)~ duas vezes em:
+
+#+begin_src haskell
+(1 + 3) * (1 + 3)
+#+end_src
+
+- Calcula-se uma vez e compartilha-se o resultado.
+
+* Avaliação sob demanda
+
+** Avaliação sob demanda
+
+- Chamamos de avaliação sob demanda a combinação:
+  - avaliação não estrita
+  - compartilhamento de resultados
+
+** Avaliação sob demanda
+
+- A avaliação sob demanda *NUNCA* requer mais passos de avaliação que a estrita.
+  - Em termos assintóticos.
+
+** Avaliação sob demanda
+
+- A avaliação sob demanda finaliza a execução de mais programas que a estrita.
+
+#+begin_src haskell
+loop :: a -> a
+loop x = loop x
+#+end_src
+
+- Qual o resultado de ~const 3 (loop 5)~ ?
+
+** Avaliação sob demanda 
+
+- Avaliação estrita força a execução dos argumentos
+  - Ocasionando um loop...
+
+#+begin_src haskell
+const 3 (loop 5)
+=
+const 3 (loop 5)
+=
+...
+#+end_src
+
+** Avaliação sob demanda
+
+- Avaliação sob demanda: programa termina com o valor 3.
+
+#+begin_src haskell
+const 3 (loop 5)
+=
+3
+#+end_src
+
+** Avaliação sob demanda
+
+- Outra vantagem: programar estruturas de controle.
+  - Com avaliação sob demanda, não há necessidade de avaliar expressões do then e do else.
+
+#+begin_src haskell :tangle yes :exports code :results output
+if_ :: Bool -> a -> a -> a
+if_ True  t _ = t
+if_ False _ f = f
+#+end_src
+
+** Avaliação sob demanda
+
+- Curto circuito:
+  - Execução de ~False && loop True~ termina.
+
+#+begin_src haskell
+(&&) :: Bool -> Bool -> Bool
+False && _ = False
+True  && v = v
+#+end_src
+
+** Avaliação sob demanda
+
+- Estruturas de dados infinitas
+
+#+begin_src haskell :tangle yes :exports code :results output
+ones :: [Integer]
+ones = 1 : ones
+#+end_src
+
+** Avaliação sob demanda
+
+- Uso de estruturas infinitas é ok se observarmos apenas um prefixo finito.
+
+#+begin_src haskell
+take 5 ones
+#+end_src
+
+** Avaliação sob demanda
+
+- Construindo uma lista de todos os números naturais
+
+#+begin_src haskell :tangle yes :exports code :results output
+nats :: [Integer]
+nats = 0 : map (+ 1) nats
+#+end_src
+
+** Avaliação sob demanda
+
+- Listando a sequência de Fibonacci
+
+#+begin_src haskell :tangle yes :exports code :results output
+fibs :: [Integer]
+fibs = 0 : 1 : zipWith (+) fibs (tail fibs)
+#+end_src
+
+** Avaliação sob demanda
+
+- Crivo de Eratóstenes
+  - Algoritmo para obter a lista de números primos.
+
+** Avaliação sob demanda
+
+1. Liste números começando com 2.
+2. Escolha o primeiro número /p/ da lista.
+3. Remova todos os múltiplos de /p/.
+4. Retorne ao passo 2.
+
+** Avaliação sob demanda
+
+1. Liste números começando a partir de 2.
+
+#+begin_src haskell
+primes :: [Integer]
+primes = sieve [2 ..]
+#+end_src
+
+** Avaliação sob demanda
+
+2. Escolha o primeiro número /p/ da lista.
+
+#+begin_src haskell
+primes :: [Integer]
+primes = sieve [2 ..]
+  where
+    sieve (p : ns) = p : ...
+#+end_src
+
+** Avaliação sob demanda
+
+3. Remova todos os múltiplos de /p/.
+   
+#+begin_src haskell
+primes :: [Integer]
+primes = sieve [2 ..]
+  where
+    sieve (p : ns) = p : [x | x <- ns, x `mod` p == 0]
+#+end_src
+
+
+** Avaliação sob demanda
+
+4. Retorne ao passo 2.
+   
+#+begin_src haskell :tangle yes :exports code :results code
+primes :: [Integer]
+primes = sieve [2 ..]
+  where
+    sieve (p : ns) = p : sieve [x | x <- ns, x `mod` p == 0]
+#+end_src
+
+** Avaliação sob demanda
+
+- Pergunta: como Haskell decide até onde avaliar um argumento?
+
+** Avaliação sob demanda
+
+- Argumentos são avaliados até que seja possível determinar qual equação será executada.
+
+** Avaliação sob demanda
+
+- Formalmente, argumentos são avaliados até obtermos uma *weak-head normal form*
+
+** Avaliação sob demanda
+
+- Weak-head normal form
+  - Construtores (possivelmente com expressões não avaliadas)
+    - ~True~ e ~Just (1 + 3)~
+  - Funções anônimas
+  - Funções parcialmente aplicadas.
+    - ~map not~
+
+** Avaliação sob demanda
+
+- Quais expressões estão na whnf?
+
+#+begin_src haskell
+1. zip [1..]
+2. Node Leaf (mapTree (+ 1) Leaf)
+3. map (x :) xs
+4. height (Node 'a' Leaf (Node 'b' Leaf Leaf))
+5. \ _ b -> b
+6. map (\x -> x + 1) [1..5]
+#+end_src
+
+
+** Avaliação sob demanda
+
+- Quais expressões estão na whnf?
+
+#+begin_src haskell
+1. zip [1..]
+2. Node Leaf (mapTree (+ 1) Leaf)
+3. map (x :) xs
+4. height (Node 'a' Leaf (Node 'b' Leaf Leaf))
+5. \ _ b -> b
+6. map (\x -> x + 1) [1..5]
+#+end_src
+
+- Resposta: 1, 2 e 5
+
+* Estudo de caso
+
+** Estudo de caso
+
+- Vamos utilizar a avaliação sob demanda para implementar o algoritmo de Newton para obtenção da raiz quadrada de um número /n/.
+
+** Estudo de caso
+
+1. Comece com uma aproximação inicial do resultado.
+2. A próxima aproximação é dada por
+   
+#+begin_src haskell
+next x = (x + n / x) / 2
+#+end_src
+
+3. Repita até encontrar aproximações consecutivas \(x_1\) e \(x_2\) tais que \(x_2 - x_1 \leq \varphi\).
+
+** Estudo de caso
+
+- Implementação da função ~next~:
+
+#+begin_src haskell :tangle yes :exports code :results output
+next :: Double -> Double -> Double
+next n x0 = (x0 + n / x0) / 2
+#+end_src
+
+** Estudo de caso
+
+- Criando uma lista infinita de aproximações sucessivas.
+
+#+begin_src haskell :tangle yes :exports code :results output
+approximations :: Double -> Double -> [Double]
+approximations x0 n = iterate (next n) x0
+#+end_src
+
+** Estudo de caso
+
+- Obtendo o resultado a partir das aproximações consectutivas.
+
+#+begin_src haskell :tangle yes :exports code :results output
+within :: Double -> [Double] -> Double
+within phi (x0 : x1 : xs) = if abs (x0 - x1) < phi then x1 else within phi (x1 : xs)
+#+end_src
+
+** Estudo de caso
+
+- Função para raiz quadrada usando o algoritmo de Newton.
+
+#+begin_src haskell :tangle yes :exports code :results output
+newton :: Double -> Double
+newton n = within 0.0001 (approximations (n / 2) n)
+#+end_src
+
+** Estudo de caso
+
+- Exemplo
+
+#+begin_src haskell :tangle yes :exports code :results output
+newton 100
+#+end_src
+
+* Exercícios
+
+** Exercícios
+
+- Implemente uma função para produzir uma lista de números com as seguintes propriedades:
+  - A lista é ordenada
+  - A lista começa com o número 1.
+  - Se a lista possui o número /x/ então /2x/, /3x/ e /5x/ pertencem a lista.
+
+
+
