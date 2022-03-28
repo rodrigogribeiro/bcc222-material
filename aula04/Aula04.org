@@ -17,6 +17,23 @@
 - Apresentar sobre /list comprehensions/.
 - Definição de funções recursivas.
 
+** Setup
+
+#+begin_src haskell :tangle yes :exports code :results output
+module Aula04 where
+
+import Prelude hiding ( length
+                      , replicate
+                      , sum
+                      , reverse
+                      , elem
+                      , take
+                      , (++)
+                      , zip
+                      )
+
+#+end_src
+
 * Recapitulando
 
 ** Recapitulando
@@ -36,18 +53,6 @@
 - Definição de funções por casamento de padrão
 
 #+begin_src haskell :tangle yes :export code :results output
-module Aula04 where
-
-import Prelude hiding ( length
-                      , replicate
-                      , sum
-                      , reverse
-                      , elem
-                      , take
-                      , (++)
-                      , zip
-                      )
-
 length :: [a] -> Int
 length []       = 0
 length (_ : xs) = 1 + length xs
@@ -696,7 +701,6 @@ sorted (x : y : ys)
  
 - Generalize e simplifique
    - Padrão sobre listas unitárias
-   - Evitando o casamento de padrão usando =@=.
    - Generalizando o tipo para a classe =Ord=
 
 #+begin_src haskell :tangle yes :exports code :results output   
