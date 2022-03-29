@@ -1,0 +1,540 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Aula13.hs
+#+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title: Estudo de caso: parsing
+#+Author: Programação Funcional
+
+* Objetivos
+
+** Objetivos
+
+- Utilizar functores aplicativos para desenvolver uma biblioteca para parsing.
+
+** Setup
+
+#+begin_src haskell :tangle yes :exports code :results output
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+module Aula13 where
+
+import Data.Char
+#+end_src
+
+* Parsing
+
+** Parsing
+
+- Verificar se uma sequência de entrada possui uma estrutura de interesse
+
+- Problema central em computação.
+
+** Parsing
+
+- O que é um parser?
+
+#+begin_src haskell :tangle yes :exports code :results output
+newtype Parser s a
+     = Parser {
+         runParser :: [s] -> [(a,[s])]
+       }
+#+end_src
+
+** Parsing
+
+- O tipo de um parser é uma função
+
+#+begin_src haskell
+[s] -> [(a,[s])]
+#+end_src
+
+- s : Tipo do símbolo de entrada. Normalmente, =Char=.
+- a : Tipo do resultado produzido ao se processar a entrada =[s]=.
+
+** Parsing
+
+- O tipo Parser utiliza uma abordagem conhecida como list of success
+    - Falhas representadas como uma lista vazia de resultados.
+    - Um resultado: determinismo.
+    - Mais de um resultado: backtracking implícito (não determinismo).
+
+** Parsing
+
+- Exemplo: parsing de um símbolo
+
+#+begin_src haskell :tangle yes :exports code :results output
+symbol :: Eq s => s -> Parser s s
+symbol s = Parser (\ inp -> case inp of
+                              [] -> []
+                              (x : xs) -> if x == s
+                                          then [(s,xs)]
+                                          else [])
+#+end_src
+    
+** Parsing
+
+- Exemplo: processando o caractere "a".
+
+#+begin_src haskell
+runParser (symbol 'a') "a"
+#+end_src
+
+- Resultado
+
+#+begin_src haskell
+[('a', [])]
+#+end_src
+
+** Parsing
+
+- Processando uma sequência de símbolos
+
+#+begin_src haskell :tangle yes :exports code :results output
+token :: Eq s => [s] -> Parser s [s]
+token s
+  = Parser (\ inp -> if s == (take n inp)
+                     then [(s, drop n inp)]
+                     else [])
+    where
+      n = length s
+#+end_src
+
+** Parsing
+
+- Processando um símbolo que atende uma condição
+
+#+begin_src haskell :tangle yes :exports code :results output
+sat :: (s -> Bool) -> Parser s s
+sat p = Parser (\ inp -> case inp of
+                           [] -> []
+                           (x : xs) -> if p x
+                                       then [(x,xs)]
+                                       else [])
+#+end_src
+
+** Parsing
+
+- Exemplo: parsing de um dígito
+
+#+begin_src haskell :tangle yes :exports code :results output
+digitChar :: Parser Char Char
+digitChar = sat isDigit
+#+end_src
+
+** Parsing
+
+- O parser anterior retorna um caractere como resultado.
+  - Como retornar um inteiro?
+
+** Parsing
+
+- Para isso, vamos criar uma instância de =Functor= para o tipo =Parser=.
+
+#+begin_src haskell :tangle yes :exports code :results output
+instance Functor (Parser s) where
+   fmap f (Parser p)
+      = Parser (\ inp -> [(f x, xs) | (x,xs) <- p inp])
+#+end_src
+
+** Parsing
+
+- Usando a instância de =Functor=, podemos definir um parser que retorna o inteiro correspondente a um dígito.
+
+#+begin_src haskell :tangle yes :exports code :results output
+digit :: Parser Char Int
+digit = f <$> digitChar
+        where
+          f c = ord c - ord '0'
+#+end_src
+
+** Parsing
+
+- A função =succeed= é parser que não falha.
+
+#+begin_src haskell :tangle yes :exports code :results output
+succeed :: a -> Parser s a
+succeed v = Parser (\ inp -> [(v,inp)])
+#+end_src
+
+** Parsing
+
+- A função =failure= é um parser que sempre falha.
+
+#+begin_src haskell :tangle yes :exports code :results output
+failure :: Parser s a
+failure = Parser (\ _ -> [])
+#+end_src
+
+** Parsing
+
+- Escolha entre dois parsers.
+
+#+begin_src haskell :tangle yes :exports code :results output
+infixr 4 <|>
+
+(<|>) :: Parser s a -> Parser s a -> Parser s a
+(Parser p) <|> (Parser q)
+   = Parser (\ inp -> p inp ++ q inp)
+#+end_src
+
+** Parsing
+
+- Execução sequencial
+
+#+begin_src haskell :tangle yes :exports code :results output
+instance Applicative (Parser s) where
+   pure = succeed
+   (Parser p) <*> (Parser q)
+     = Parser (\ inp -> [(f x, xs) | (f, ys) <- p inp
+                                   , (x, xs) <- q ys])
+#+end_src
+
+** Parsing
+
+- Exemplo: reconhecendo "ab" ou "ba"
+
+#+begin_src haskell :tangle yes :exports code 
+ex1 :: Parser Char String
+ex1 = token "ab" <|> token "ba"
+#+end_src
+
+** Parsing
+
+- Reconhecendo parêntesis balanceados. Strings pertencentes a gramática:
+
+\begin{array}{lcl}
+S & \to & (S)\,S\:\mid\epsilon
+\end{array}
+
+** Parsing
+
+- Usaremos um tipo de dados para representar palavras de parêntesis balanceados
+
+#+begin_src haskell :tangle yes :exports code
+data Paren = Match Paren Paren | Empty
+
+instance Show Paren where
+   show Empty = ""
+   show (Match p p') = "(" ++ show p ++ ")" ++ show p'
+#+end_src
+
+** Parsing
+
+- Definição do parser.
+
+#+begin_src haskell :tangle yes :exports code
+open :: Parser Char Char
+open = symbol '('
+
+close :: Parser Char Char
+close = symbol ')'
+
+parens :: Parser Char Paren
+parens = (f <$> open <*> parens <*> close <*> parens)
+         <|> succeed Empty
+         where
+           f _ p _ p' = Match p p'
+#+end_src
+
+** Parsing
+
+- O parser =option p d= reconhece a entrada aceita por p ou retorna o valor padrão d.
+
+#+begin_src haskell :tangle yes :exports code
+option :: Parser s a -> a -> Parser s a
+option p d = p <|> succeed d
+#+end_src
+
+** Parsing
+
+- Repetindo a execução de um parser
+
+#+begin_src haskell :tangle yes :exports code
+many :: Parser s a -> Parser s [a]
+many p = ((:) <$> p <*> many p) <|> succeed []
+
+many1 :: Parser s a -> Parser s [a]
+many1 p = (:) <$> p <*> many p
+#+end_src
+
+** Parsing
+
+- Exemplo: fazendo o parsing de um número natural
+
+#+begin_src haskell :tangle yes :exports code
+natural :: Parser Char Int
+natural = foldl f 0 <$> many digit
+     where
+       f ac d = ac * 10 + d
+#+end_src
+
+** Parsing
+
+- A função many retorna resultados intermediários.
+
+- Problema: isso pode afetar a eficiência, quando não estamos interessados em backtracking.
+
+** Parsing
+
+- Solução: descartar resultados intermediários.
+
+#+begin_src haskell :tangle yes :exports code
+first :: Parser s a -> Parser s a
+first (Parser p)
+   = Parser (\ inp -> let r = p inp
+                      in if null r then []
+                         else [head r])
+#+end_src
+
+** Parsing
+
+- Solução: repetição gulosa
+  - Descarta resultados intermediários.
+
+#+begin_src haskell :tangle yes :exports code
+greedy :: Parser s a -> Parser s [a]
+greedy = first . many
+
+greedy1 :: Parser s a -> Parser s [a]
+greedy1 = first . many1
+#+end_src
+
+** Parsing
+
+- Reconhecendo identificadores
+
+#+begin_src haskell :tangle yes :exports code
+identifier :: Parser Char String
+identifier
+   = (:) <$> letter <*> greedy (sat isAlphaNum)
+     where
+       letter = sat isLetter
+#+end_src
+
+** Parsing
+
+- Parser =listOf p sep= processa elementos usando p usando como separador sep.
+
+#+begin_src haskell :tangle yes :exports code
+listOf :: Parser s a -> Parser s b -> Parser s [a]
+listOf p sep
+   = (:) <$> p <*> many ((\ x y -> y) <$> sep <*> p)
+#+end_src
+
+** Parsing
+
+- Parser =pack p q r= processa o parser q usando os separadores p e r, descartando-os.
+
+#+begin_src haskell :tangle yes :exports code
+pack :: Parser s a -> Parser s b ->
+        Parser s c -> Parser s b
+pack p q r = (\ _ x _ -> x) <$> p <*> q <*> r
+#+end_src
+
+** Parsing
+
+- Processando conteúdo entre parêntesis
+
+#+begin_src haskell :tangle yes :exports code
+parenthesized :: Parser Char a -> Parser Char a
+parenthesized p = pack (symbol '(') p (symbol ')')
+#+end_src
+
+** Parsing
+
+- O parser =endBy p q= processa listas de elementos reconhecidos por p usando como separadores o que é processado por q.
+
+#+begin_src haskell :tangle yes :exports code
+endBy :: Parser s a -> Parser s b -> Parser s [a]
+endBy p sep = greedy ((\ x _ -> x) <$> p <*> sep)
+#+end_src
+
+* Arquivos CSV
+
+** Arquivos CSV
+
+- Arquivos CSV: representação textual de dados em tabelas (planilhas)
+    - Dados representados como strings.
+    - Separadores para dividir colunas.
+    - Linhas no arquivo denotam linhas na tabela.
+
+** Arquivos CSV
+
+- Representando CSV em Haskell.
+
+#+begin_src haskell :tangle yes :exports code
+type CSV = [Line]
+type Line = [Cell]
+type Cell = String
+#+end_src
+
+** Arquivos CSV
+
+- Célula: qualquer string sem \n e ,.
+
+#+begin_src haskell :tangle yes :exports code
+cellParser :: Parser Char Cell
+cellParser = greedy valid
+    where
+       valid = sat (\ c -> notElem c ",\n")
+#+end_src
+
+** Arquivos CSV
+
+- Linhas: células separadas por colunas
+
+#+begin_src haskell :tangle yes :exports code
+lineParser :: Parser Char Line
+lineParser = listOf cellParser (symbol ',')
+#+end_src
+
+** Arquivos CSV
+
+- Parser para o conteúdo do CSV
+
+#+begin_src haskell :tangle yes :exports code
+csvParser :: Parser Char CSV
+csvParser = endBy lineParser eol
+   where
+     eol = symbol '\n'
+#+end_src
+
+** Arquivos CSV
+
+- Função para executar o parser
+
+#+begin_src haskell :tangle yes :exports code
+parseCSV :: FilePath -> IO ()
+parseCSV file
+   = do
+       content <- readFile file
+       print (runParser csvParser content)
+#+end_src
+
+* Expressões
+
+** Expressões
+
+- No que vimos, separadores não possuem significado.
+
+- Mas, seperadores podem possuir significado?
+    - Sim! Expressões com operadores binários.
+
+** Expressões
+
+- Operador associativo a direita
+
+#+begin_src haskell :tangle yes :exports code
+chainr :: Parser s a ->             -- expressão
+          Parser s (a -> a -> a) -> -- operador
+          Parser s a
+chainr pe po
+   = h <$> many (j <$> pe <*> po) <*> pe
+     where
+       j x op = op x
+       h fs x = foldr ($) x fs
+#+end_src
+
+** Expressões
+
+- Operador associativo a esquerda
+
+#+begin_src haskell :tangle yes :exports code
+chainl :: Parser s a ->             -- expressão
+          Parser s (a -> a -> a) -> -- operador
+          Parser s a
+chainl pe po
+   = h <$> pe <*> many (j <$> po <*> pe)
+     where
+       j op x = \ y -> op y x
+       h x fs = foldl (flip ($)) x fs
+#+end_src
+
+** Expressões
+
+- Sintaxe de expressões
+
+- Sintaxe de expressões:
+
+\begin{array}{lcl}
+e & \to  & t + e \\
+  & \mid & t \\
+t & \to & f * t \\
+  & \mid & f \\
+f & \to & n \\
+  & \mid & (e)\\
+\end{array}
+
+
+** Expressões
+
+- Tipo de dados para representar a árvore de sintaxe de expressões.
+
+#+begin_src haskell :tangle yes :exports code
+data Exp
+   = Const Int
+   | Exp :+: Exp
+   | Exp :*: Exp
+   deriving (Eq, Ord, Show)
+#+end_src
+
+** Expressões
+
+- Regras \(f \to n \mid (e)\):
+
+#+begin_src haskell :tangle yes :exports code
+factorParser :: Parser Char Exp
+factorParser
+   =  parenthesized (expParser) <|>
+      (Const <$> natural)
+#+end_src
+
+** Expressões
+
+- Regras \(t \to f + t \mid t\):
+
+#+begin_src haskell :tangle yes :exports code
+termParser :: Parser Char Exp
+termParser
+   = chainr factorParser pmult
+     where
+       pmult = const (:*:) <$> symbol '*'
+#+end_src
+
+** Expressões
+
+- Regras \(e \to t * e \mid t\):
+
+#+begin_src haskell :tangle yes :exports code
+expParser :: Parser Char Exp
+expParser
+  = chainr termParser pplus
+    where
+      pplus = const (:+:) <$> symbol '+'
+#+end_src
+
+* Exercícios
+
+** Exercícios 
+
+- Implemente um parser para strings da forma:
+
+
+(id_1, ... , id_n)
+
+
+em que cada \(id_i\) é um identificador. Note que a lista de identificadores usa como separador o caractere ','.
+
+
+
+
+
+
+
+
+
+
