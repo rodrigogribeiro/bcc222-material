@@ -1,0 +1,566 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Aula15.hs
+#+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title: Correção de programas
+#+Author: Programação Funcional
+
+
+* Objetivos
+
+** Objetivos
+
+- Apresentar a técnica de raciocínio de equações para demonstração de correção de programas funcionais.
+
+* Matemática
+
+** Matemática
+
+- Funções matemática não dependem de valores "ocultos" ou que podem ser alterados.
+   - Ex: 2 + 3 = 5 tanto em 4 * (2 + 3) quanto em (2 + 3) * (2 + 3).
+
+- Isso facilita a demonstração de propriedades sobre essas funções.
+
+
+** Matemática
+
+- Exemplo de propriedades (teoremas):
+
+\begin{array}{l}
+\forall x y. x + y = y + x \\
+\forall x y. x \times y = y \times x \\
+\forall x y z. x + (y + z) = (x + y) + z \\
+\forall x . x + 0 = 0 + x = x \\
+\forall x y z. x \times (y + z) = (x \times y) + (x \times z)\\
+\end{array}
+
+** Matemática
+
+- Teoremas podem ajudar na **performance**
+    - Substituir implementações ineficientes por equivalentes mais eficientes.
+- Teoremas são a forma de mostrar que seu código atende os requisitos corretamente.
+
+* Demonstrações
+
+** Demonstrações
+
+#+begin_quote
+Correctness is clearly the prime quality.
+If a system does not do what it is supposed
+to do, then everything else about it
+matters little. -- Bertrand Meyer, criador da linguagem Eiffel.
+#+end_quote
+
+** Demonstrações
+
+- Em matemática, é comum termos demonstrações similares a:
+
+\begin{array}{lcl}
+(a + b)^2 & = & \textrm{def. de }x^2\\
+(a + b)\times (a + b) & = & \textit{distr.}\\
+((a + b) \times a) + ((a + b) \times b) & = & \textit{comut.}\\
+(a \times (a + b)) + (b \times (a + b)) & = & \textit{distr.}\\
+(a \times a + a \times b) + (b \times a + b\times b) & = & ...\\
+\end{array}
+
+
+** Demonstrações
+
+- Continuando...
+
+\begin{array}{lcl}
+(a \times a + a \times b) + (b \times a + b\times b) & = & \textit{assoc.} \\
+a \times a + (a \times b + b \times a) + b\times b & = & \textit{comut.} \\
+a \times a + (a \times b + a \times b) + b\times b & = & \textit{comut.} \\
+a^2 + 2 \times a \times b + b^2 & = &\textit{def. de}x^2 \textit{ e de} +\\
+\end{array}
+
+** Demonstrações
+
+- Como Haskell possui transparência referencial, podemos provar propriedades sobre programas usando raciocínio baseado em equações, como na matemática.
+
+** Demonstrações
+
+- Considere a definição da função reverse:
+
+#+begin_src haskell
+(++) :: [a] -> [a] -> [a]
+[] ++ ys = ys
+(x:xs) ++ ys = x : (xs ++ ys)
+
+reverse :: [a] -> [a]
+reverse [] = []
+reverse (x : xs) = reverse xs ++ [x]
+#+end_src
+
+** Demonstrações
+
+- Provar que forall x. reverse [x] = [x].
+
+#+begin_src haskell 
+reverse [x]       = -- list notation
+#+end_src
+
+
+** Demonstrações
+
+- Provar que forall x. reverse [x] = [x].
+
+#+begin_src haskell 
+reverse [x]       = -- list notation
+reverse (x : [])  = -- def. reverse
+#+end_src
+
+
+** Demonstrações
+
+- Provar que forall x. reverse [x] = [x].
+
+#+begin_src haskell 
+reverse [x]       = -- list notation
+reverse (x : [])  = -- def. reverse
+reverse [] ++ [x] = -- def. reverse
+#+end_src
+
+
+** Demonstrações
+
+- Provar que forall x. reverse [x] = [x].
+
+#+begin_src haskell 
+reverse [x]       = -- list notation
+reverse (x : [])  = -- def. reverse
+reverse [] ++ [x] = -- def. reverse
+[] ++ [x]         = -- def. ++
+#+end_src
+
+
+** Demonstrações
+
+- Provar que forall x. reverse [x] = [x].
+
+#+begin_src haskell 
+reverse [x]       = -- list notation
+reverse (x : [])  = -- def. reverse
+reverse [] ++ [x] = -- def. reverse
+[] ++ [x]         = -- def. ++
+[x]
+#+end_src
+
+* Análise de casos
+
+** Análise de casos
+
+- Em algumas situações, é necessário considerar as diferentes possibilidades de parâmetros de entrada.
+
+- Exemplo: provar que not é involutivo.
+
+#+begin_src haskell
+forall x. not (not x) = x
+#+end_src
+
+** Análise de casos
+
+- Definição de not:
+
+#+begin_src haskell
+not :: Bool -> Bool
+not False = True
+not True  = False
+#+end_src
+
+** Análise de casos
+
+- Provando que not (not x) = x.
+
+- Caso x = False:
+
+#+begin_src haskell
+not (not False) = -- def. de not
+#+end_src
+
+
+** Análise de casos
+
+- Provando que not (not x) = x.
+
+- Caso x = False:
+
+#+begin_src haskell
+not (not False) = -- def. de not
+not True        = -- def. de not
+#+end_src
+
+
+** Análise de casos
+
+- Provando que not (not x) = x.
+
+- Caso x = False:
+
+#+begin_src haskell
+not (not False) = -- def. de not
+not True        = -- def. de not
+False
+#+end_src
+
+** Análise de casos
+
+- Provando que not (not x) = x (cont.).
+
+- Caso x = True:
+
+#+begin_src haskell
+not (not True) = -- def. de not
+#+end_src
+
+
+** Análise de casos
+
+- Provando que not (not x) = x (cont.).
+
+- Caso x = True:
+
+#+begin_src haskell
+not (not True) = -- def. de not
+not False      = -- def. de not
+#+end_src
+
+
+** Análise de casos
+
+- Provando que not (not x) = x (cont.).
+
+- Caso x = True:
+
+#+begin_src haskell
+not (not True) = -- def. de not
+not False      = -- def. de not
+True
+#+end_src
+
+* Números naturais
+
+** Números naturais
+
+- Representando números naturais na notação de Peano.
+
+#+begin_src haskell :tangle yes :exports code
+data Nat = Zero | Succ Nat
+           deriving (Eq, Ord, Show)
+#+end_src
+
+** Números naturais
+
+#+begin_src haskell :tangle yes :exports code
+two :: Nat
+two = Succ (Succ Zero)
+#+end_src
+
+** Números naturais
+
+- Soma de números naturais
+
+#+begin_src haskell :tangle yes :exports code
+(.+.) :: Nat -> Nat -> Nat
+Zero      .+. m = m               -- 1
+(Succ n') .+. m = Succ (n' .+. m) -- 2
+#+end_src
+
+** Números naturais
+
+- Exemplo
+
+#+begin_src haskell
+(Succ (Succ Zero)) .+. (Succ Zero) = -- eq. 2
+#+end_src 
+
+
+** Números naturais
+
+- Exemplo
+
+#+begin_src haskell
+(Succ (Succ Zero)) .+. (Succ Zero) = -- eq. 2
+Succ ((Succ Zero) .+. (Succ Zero)) = -- eq. 2
+#+end_src 
+
+
+** Números naturais
+
+- Exemplo
+
+#+begin_src haskell
+(Succ (Succ Zero)) .+. (Succ Zero) = -- eq. 2
+Succ ((Succ Zero) .+. (Succ Zero)) = -- eq. 2
+Succ (Succ (Zero .+. (Succ Zero))) = -- eq. 1
+#+end_src 
+
+
+** Números naturais
+
+- Exemplo
+
+#+begin_src haskell
+(Succ (Succ Zero)) .+. (Succ Zero) = -- eq. 2
+Succ ((Succ Zero) .+. (Succ Zero)) = -- eq. 2
+Succ (Succ (Zero .+. (Succ Zero))) = -- eq. 1
+Succ (Succ (Succ Zero))
+#+end_src 
+
+** Números naturais
+
+- Usando a definição de soma (equação 1), temos que:
+
+#+begin_src haskell
+forall n. Zero .+. n = n
+#+end_src
+
+** Números naturais
+
+- Parece óbvio que a seguinte propriedade também deve ser verdadeira:
+
+#+begin_src haskell
+forall n. n .+. Zero = n
+#+end_src
+
+** Números naturais
+
+- Porém, a propriedade não é imediata a partir das equações 1 e 2 da adição.
+
+- Afinal, não é possível determinar se n = Zero ou se n = Succ n', para algum n' em
+
+#+begin_src haskell
+forall n. n .+. Zero = n
+#+end_src
+
+** Números naturais
+
+- Como a adição é definida recursivamente, não podemos usar análise de casos para concluir a prova de
+
+#+begin_src haskell
+forall n. n .+. Zero = n
+#+end_src
+
+- Para isso, devemos usar **indução**.
+
+* Indução
+
+** Indução
+
+- Provas envolvendo funções recursivas são realizadas por indução.
+
+- Casos base são construtores do tipo que não envolvem recursão.
+
+- Passo indutivo para construtores envolvendo recursão.
+
+** Indução
+
+- Para provar forall x :: Nat. P (x), basta provar:
+  - P(Zero).
+  - forall n . P(n) -> P(Succ n).
+
+** Indução
+
+- Para a propriedade
+
+#+begin_src haskell
+forall n. n .+. Zero = n
+#+end_src
+
+- P(n) é dado por n .+. Zero = n.
+
+** Indução
+
+- Para a propriedade
+
+#+begin_src haskell
+forall n. n .+. Zero = n
+#+end_src
+
+- P(Zero) é dado por Zero .+. Zero = Zero.
+
+** Indução
+
+- Para a propriedade
+
+#+begin_src haskell
+forall n. n .+. Zero = n
+#+end_src
+
+- forall n. P(n) -> P(Succ n) é dado por:
+
+#+begin_src haskell
+forall n. n .+. Zero = n -> (Succ n) .+. Zero = (Succ n)
+#+end_src
+
+** Indução
+
+- Provando a propriedade
+
+#+begin_src haskell
+forall n. n .+. Zero = n
+#+end_src
+
+** Indução
+
+- Caso base: n = Zero.
+
+#+begin_src haskell
+Zero .+. Zero = -- def. de .+.
+Zero
+#+end_src
+
+** Indução
+
+- Caso indutivo: n = Succ n'.
+    - Hipótese de indução: n' .+. Zero = n'.
+
+#+begin_src haskell
+(Succ n') .+. Zero = -- def. de .+.
+#+end_src
+
+
+** Indução
+
+- Caso indutivo: n = Succ n'.
+    - Hipótese de indução: n' .+. Zero = n'.
+
+#+begin_src haskell
+(Succ n') .+. Zero = -- def. de .+.
+Succ (n' .+. Zero) = -- H.I.
+#+end_src
+
+
+** Indução
+
+- Caso indutivo: n = Succ n'.
+    - Hipótese de indução: n' .+. Zero = n'.
+
+#+begin_src haskell
+(Succ n') .+. Zero = -- def. de .+.
+Succ (n' .+. Zero) = -- H.I.
+Succ n'
+#+end_src
+
+
+** Indução
+
+- Mais um exemplo:
+
+#+begin_src haskell
+forall n m. Succ (n .+. m) = n .+. (Succ m)
+#+end_src
+
+- Prova por indução sobre n.
+
+** Indução
+
+- Caso base (n = Zero). Suponha m arbitrário.
+
+#+begin_src haskell
+Succ (Zero .+. m) = -- def. de .+.
+#+end_src
+
+
+** Indução
+
+- Caso base (n = Zero). Suponha m arbitrário.
+
+#+begin_src haskell
+Succ (Zero .+. m) = -- def. de .+.
+Succ m            = -- def. de .+.
+#+end_src
+
+
+** Indução
+
+- Caso base (n = Zero). Suponha m arbitrário.
+
+#+begin_src haskell
+Succ (Zero .+. m) = -- def. de .+.
+Succ m            = -- def. de .+.
+Zero .+. Succ m
+#+end_src
+
+** Indução
+
+- Caso indutivo (n = Succ n'). Suponha m arbitrário e que Succ (n' .+. m) = n' .+. (Succ m). Temos:
+
+#+begin_src haskell
+Succ (Succ n') .+. m   = -- def. de .+.
+#+end_src
+
+
+** Indução
+
+- Caso indutivo (n = Succ n'). Suponha m arbitrário e que Succ (n' .+. m) = n' .+. (Succ m). Temos:
+
+#+begin_src haskell
+Succ (Succ n') .+. m   = -- def. de .+.
+Succ (Succ (n' .+. m)) = -- H.I.
+#+end_src
+
+
+** Indução
+
+- Caso indutivo (n = Succ n'). Suponha m arbitrário e que Succ (n' .+. m) = n' .+. (Succ m). Temos:
+
+#+begin_src haskell
+Succ (Succ n') .+. m   = -- def. de .+.
+Succ (Succ (n' .+. m)) = -- H.I.
+Succ (n' .+. (Succ m)) = -- def. de .+.
+#+end_src
+
+
+** Indução
+
+- Caso indutivo (n = Succ n'). Suponha m arbitrário e que Succ (n' .+. m) = n' .+. (Succ m). Temos:
+
+#+begin_src haskell
+Succ (Succ n') .+. m   = -- def. de .+.
+Succ (Succ (n' .+. m)) = -- H.I.
+Succ (n' .+. (Succ m)) = -- def. de .+.
+(Succ n') .+. (Succ m)
+#+end_src
+
+* Exercícios
+
+** Exercício
+
+- Prove que, para todo x e f, map f [x] = [f x], usando a definição de map.
+
+#+begin_src haskell
+map :: (a -> b) -> [a] -> [b]
+map _ [] = []
+map f (x : xs) = f x : map f xs
+#+end_src
+
+
+** Exercício
+
+- Prove que a operação de disjunção, (||), atende as seguintes propriedades:
+
+#+begin_src haskell
+forall a b c. a || (b || c) = (a || b) || c
+forall a. a || False = a
+forall b. False || b = b
+#+end_src
+
+** Exercícios
+
+- Prove que a adição é uma operação associativa, isto é:
+
+#+begin_src haskell
+forall n m p. (n .+. m) .+. p = n .+. (m .+. p)
+#+end_src
+
+
+
+
+

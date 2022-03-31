@@ -1,0 +1,846 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Aula16.hs
+#+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title: Correção de programas
+#+Author: Programação Funcional
+
+
+* Objetivos
+
+** Objetivos
+
+- Construção de provas por indução envolvendo algoritmos sobre listas e árvores em Haskell.
+
+* Indução sobre listas
+
+** Indução sobre listas
+
+- Para provar uma propriedade
+
+#+begin_src haskell
+forall xs :: [a] . P (xs)
+#+end_src
+
+- Devemos provar:
+  - P([])
+  - forall x xs. P(xs) -> P (x : xs)
+
+** Indução sobre listas
+
+- Provar a seguinte propriedade
+
+#+begin_src haskell
+forall xs ys. length (xs ++ ys) = length xs + length ys
+#+end_src
+
+** Indução sobre listas
+
+- Lembrando:
+
+#+begin_src haskell
+(++) :: [a] -> [a] -> [a]
+[] ++ ys = ys
+(x : xs) ++ ys = x : (xs ++ ys)
+
+length :: [a] -> Int
+length [] = 0
+length (_ : xs) = 1 + length xs
+#+end_src
+
+** Indução sobre listas
+
+- Caso base (xs = []). Suponha ys arbitrário.
+
+#+begin_src haskell
+length ([] ++ ys) = -- def. de ++
+#+end_src
+
+
+** Indução sobre listas
+
+- Caso base (xs = []). Suponha ys arbitrário.
+
+#+begin_src haskell
+length ([] ++ ys) = -- def. de ++
+length ys         = -- aritmética
+#+end_src
+
+
+** Indução sobre listas
+
+- Caso base (xs = []). Suponha ys arbitrário.
+
+#+begin_src haskell
+length ([] ++ ys) = -- def. de ++
+length ys         = -- aritmética
+0 + length ys     = -- def. de length
+#+end_src
+
+
+** Indução sobre listas
+
+- Caso base (xs = []). Suponha ys arbitrário.
+
+#+begin_src haskell
+length ([] ++ ys) = -- def. de ++
+length ys         = -- aritmética
+0 + length ys     = -- def. de length
+length [] + length ys
+#+end_src
+
+** Indução sobre listas
+
+- Caso base (xs = z : zs). Suponha z, zs e ys arbitrários.
+  - H.I. length (zs ++ ys) = length zs  + length ys.
+
+#+begin_src haskell
+length ((z : zs) ++ ys)     = -- def. de ++
+#+end_src
+
+
+** Indução sobre listas
+
+- Caso base (xs = z : zs). Suponha z, zs e ys arbitrários.
+  - H.I. length (zs ++ ys) = length zs  + length ys.
+
+#+begin_src haskell
+length ((z : zs) ++ ys)     = -- def. de ++
+length (z : (zs ++ ys))     = -- def. de length
+#+end_src
+
+
+** Indução sobre listas
+
+- Caso base (xs = z : zs). Suponha z, zs e ys arbitrários.
+  - H.I. length (zs ++ ys) = length zs  + length ys.
+
+#+begin_src haskell
+length ((z : zs) ++ ys)     = -- def. de ++
+length (z : (zs ++ ys))     = -- def. de length
+1 + length (zs ++ ys)       = -- H.I.
+#+end_src
+
+
+** Indução sobre listas
+
+- Caso base (xs = z : zs). Suponha z, zs e ys arbitrários.
+  - H.I. length (zs ++ ys) = length zs  + length ys.
+
+#+begin_src haskell
+length ((z : zs) ++ ys)     = -- def. de ++
+length (z : (zs ++ ys))     = -- def. de length
+1 + length (zs ++ ys)       = -- H.I.
+1 + (length zs + length ys) = -- aritmética
+#+end_src
+
+
+** Indução sobre listas
+
+- Caso base (xs = z : zs). Suponha z, zs e ys arbitrários.
+  - H.I. length (zs ++ ys) = length zs  + length ys.
+
+#+begin_src haskell
+length ((z : zs) ++ ys)     = -- def. de ++
+length (z : (zs ++ ys))     = -- def. de length
+1 + length (zs ++ ys)       = -- H.I.
+1 + (length zs + length ys) = -- aritmética
+(1 + length zs) + length ys = -- def. de length
+#+end_src
+
+
+** Indução sobre listas
+
+- Caso base (xs = z : zs). Suponha z, zs e ys arbitrários.
+  - H.I. length (zs ++ ys) = length zs  + length ys.
+
+#+begin_src haskell
+length ((z : zs) ++ ys)     = -- def. de ++
+length (z : (zs ++ ys))     = -- def. de length
+1 + length (zs ++ ys)       = -- H.I.
+1 + (length zs + length ys) = -- aritmética
+(1 + length zs) + length ys = -- def. de length
+length (z : zs) + length ys
+#+end_src
+
+** Indução sobre listas
+
+- Provar a seguinte propriedade de map:
+
+#+begin_src haskell
+forall xs :: [a]. map id xs = xs
+#+end_src
+
+** Indução sobre listas
+
+- Caso base (xs = [])
+
+#+begin_src haskell
+map id [] = -- def. de map
+[]
+#+end_src
+
+** Indução sobre listas
+
+- Caso xs = y : ys. Suponha y e ys arbitrários.
+  - H.I. map id ys = ys.
+
+#+begin_src haskell
+map id (y : ys)  = -- def. de map
+#+end_src
+
+
+** Indução sobre listas
+
+- Caso xs = y : ys. Suponha y e ys arbitrários.
+  - H.I. map id ys = ys.
+
+#+begin_src haskell
+map id (y : ys)  = -- def. de map
+id y : map id ys = -- H.I.
+#+end_Src
+
+
+** Indução sobre listas
+
+- Caso xs = y : ys. Suponha y e ys arbitrários.
+  - H.I. map id ys = ys.
+
+#+begin_src haskell
+map id (y : ys)  = -- def. de map
+id y : map id ys = -- H.I.
+id y : ys        = -- def. de id
+#+end_Src
+
+
+** Indução sobre listas
+
+- Caso xs = y : ys. Suponha y e ys arbitrários.
+  - H.I. map id ys = ys.
+
+#+begin_src haskell
+map id (y : ys)  = -- def. de map
+id y : map id ys = -- H.I.
+id y : ys        = -- def. de id
+y : ys
+#+end_Src
+
+
+* Map fusion
+
+** Map fusion
+
+- Teorema que permite compor dois caminhamentos sobre uma lista como um único.
+
+- Formalmente
+
+#+begin_src haskell
+forall xs :: [a], f :: a -> b, g :: b -> c.
+    (map g . map f) xs = map (g . f) xs
+#+end_src
+
+** Map fusion
+
+- Caso base (xs = []). Suponha f e g arbitrários.
+
+#+begin_src haskell
+(map g . map f) [] = -- def. de (.)
+#+end_src
+
+
+** Map fusion
+
+- Caso base (xs = []). Suponha f e g arbitrários.
+
+#+begin_src haskell
+(map g . map f) [] = -- def. de (.)
+map g (map f [])   = -- def. de map
+#+end_src
+
+
+** Map fusion
+
+- Caso base (xs = []). Suponha f e g arbitrários.
+
+#+begin_src haskell
+(map g . map f) [] = -- def. de (.)
+map g (map f [])   = -- def. de map
+map g []           = -- def. de map
+#+end_src
+
+
+** Map fusion
+
+- Caso base (xs = []). Suponha f e g arbitrários.
+
+#+begin_src haskell
+(map g . map f) [] = -- def. de (.)
+map g (map f [])   = -- def. de map
+map g []           = -- def. de map
+[]                 = -- def. de map
+#+end_src
+
+
+** Map fusion
+
+- Caso base (xs = []). Suponha f e g arbitrários.
+
+#+begin_src haskell
+(map g . map f) [] = -- def. de (.)
+map g (map f [])   = -- def. de map
+map g []           = -- def. de map
+[]                 = -- def. de map
+map (g . f) []
+#+end_src
+
+** Map fusion
+
+- Caso recursivo (xs = y : ys). Suponha f, g, y, ys arbitrários.
+  - H.I. (map g . map f) ys = map (g . f) ys
+
+#+begin_src haskell
+(map g . map f) (y : ys)           = -- def. de (.)
+#+end_src
+
+
+** Map fusion
+
+- Caso recursivo (xs = y : ys). Suponha f, g, y, ys arbitrários.
+  - H.I. (map g . map f) ys = map (g . f) ys
+
+#+begin_src haskell
+(map g . map f) (y : ys)           = -- def. de (.)
+map g (map f (y : ys))             = -- def. de map
+#+end_src
+
+
+** Map fusion
+
+- Caso recursivo (xs = y : ys). Suponha f, g, y, ys arbitrários.
+  - H.I. (map g . map f) ys = map (g . f) ys
+
+#+begin_src haskell
+(map g . map f) (y : ys)           = -- def. de (.)
+map g (map f (y : ys))             = -- def. de map
+map g (f y : map f ys)             = -- def. de map
+#+end_src
+
+
+** Map fusion
+
+- Caso recursivo (xs = y : ys). Suponha f, g, y, ys arbitrários.
+  - H.I. (map g . map f) ys = map (g . f) ys
+
+#+begin_src haskell
+(map g . map f) (y : ys)           = -- def. de (.)
+map g (map f (y : ys))             = -- def. de map
+map g (f y : map f ys)             = -- def. de map
+g (f y) : (map g (map f ys))       = -- def. de (.)
+#+end_src
+
+
+** Map fusion
+
+- Caso recursivo (xs = y : ys). Suponha f, g, y, ys arbitrários.
+  - H.I. (map g . map f) ys = map (g . f) ys
+
+#+begin_src haskell
+(map g . map f) (y : ys)           = -- def. de (.)
+map g (map f (y : ys))             = -- def. de map
+map g (f y : map f ys)             = -- def. de map
+g (f y) : (map g (map f ys))       = -- def. de (.)
+((g . f) y) : (map g (map f ys))   = -- def. de (.)
+#+end_src
+
+
+** Map fusion
+
+- Caso recursivo (xs = y : ys). Suponha f, g, y, ys arbitrários.
+  - H.I. (map g . map f) ys = map (g . f) ys
+
+#+begin_src haskell
+(map g . map f) (y : ys)           = -- def. de (.)
+map g (map f (y : ys))             = -- def. de map
+map g (f y : map f ys)             = -- def. de map
+g (f y) : (map g (map f ys))       = -- def. de (.)
+((g . f) y) : (map g (map f ys))   = -- def. de (.)
+((g . f) y) : ((map g . map f) ys) = -- H.I.
+#+end_src
+
+
+** Map fusion
+
+- Caso recursivo (xs = y : ys). Suponha f, g, y, ys arbitrários.
+  - H.I. (map g . map f) ys = map (g . f) ys
+
+#+begin_src haskell
+(map g . map f) (y : ys)           = -- def. de (.)
+map g (map f (y : ys))             = -- def. de map
+map g (f y : map f ys)             = -- def. de map
+g (f y) : (map g (map f ys))       = -- def. de (.)
+((g . f) y) : (map g (map f ys))   = -- def. de (.)
+((g . f) y) : ((map g . map f) ys) = -- H.I.
+((g . f) y) : map (g . f) ys       = -- def. de map
+#+end_src
+
+
+** Map fusion
+
+- Caso recursivo (xs = y : ys). Suponha f, g, y, ys arbitrários.
+  - H.I. (map g . map f) ys = map (g . f) ys
+
+#+begin_src haskell
+(map g . map f) (y : ys)           = -- def. de (.)
+map g (map f (y : ys))             = -- def. de map
+map g (f y : map f ys)             = -- def. de map
+g (f y) : (map g (map f ys))       = -- def. de (.)
+((g . f) y) : (map g (map f ys))   = -- def. de (.)
+((g . f) y) : ((map g . map f) ys) = -- H.I.
+((g . f) y) : map (g . f) ys       = -- def. de map
+map (g . f) (y : ys)
+#+end_src
+
+* Reverse
+
+** Reverse
+
+- Provar a seguinte propriedade:
+
+#+begin_src haskell
+forall xs ys.
+   reverse (xs ++ ys) = reverse ys ++ reverse xs
+#+end_src
+
+** Reverse
+
+- Caso base (xs = []). Suponha ys arbitrário.
+
+#+begin_src haskell
+reverse ([] ++ ys) = -- def. de ++
+#+end_src 
+
+
+** Reverse
+
+- Caso base (xs = []). Suponha ys arbitrário.
+
+#+begin_src haskell
+reverse ([] ++ ys) = -- def. de ++
+reverse ys         = -- Prop. forall ys. ys ++ [] = ys
+#+end_src 
+
+
+** Reverse
+
+- Caso base (xs = []). Suponha ys arbitrário.
+
+#+begin_src haskell
+reverse ([] ++ ys) = -- def. de ++
+reverse ys         = -- Prop. forall ys. ys ++ [] = ys
+reverse ys ++ []   =
+#+end_src 
+
+
+** Reverse
+
+- Caso base (xs = []). Suponha ys arbitrário.
+
+#+begin_src haskell
+reverse ([] ++ ys) = -- def. de ++
+reverse ys         = -- Prop. forall ys. ys ++ [] = ys
+reverse ys ++ []   = -- def. reverse
+reverse ys ++ reverse []
+#+end_src 
+
+** Reverse
+
+- Caso recursivo (xs = z : zs). Suponha z, zs e ys arbitrários.
+  - H.I. ~reverse (zs + ys) = reverse ys ++ reverse zs~.
+
+#+begin_src haskell
+reverse ((z : zs) ++ ys)          = -- def. de ++
+#+end_src
+
+
+** Reverse
+
+- Caso recursivo (xs = z : zs). Suponha z, zs e ys arbitrários.
+  - H.I. ~reverse (zs + ys) = reverse ys ++ reverse zs~.
+
+#+begin_src haskell
+reverse ((z : zs) ++ ys)          = -- def. de ++
+reverse (z : (zs ++ ys))          = -- def. de reverse
+#+end_src
+
+
+** Reverse
+
+- Caso recursivo (xs = z : zs). Suponha z, zs e ys arbitrários.
+  - H.I. ~reverse (zs + ys) = reverse ys ++ reverse zs~.
+
+#+begin_src haskell
+reverse ((z : zs) ++ ys)          = -- def. de ++
+reverse (z : (zs ++ ys))          = -- def. de reverse
+reverse (zs ++ ys) ++ [z]         = -- H.I.
+#+end_src
+
+
+** Reverse
+
+- Caso recursivo (xs = z : zs). Suponha z, zs e ys arbitrários.
+  - H.I. ~reverse (zs + ys) = reverse ys ++ reverse zs~.
+
+#+begin_src haskell
+reverse ((z : zs) ++ ys)          = -- def. de ++
+reverse (z : (zs ++ ys))          = -- def. de reverse
+reverse (zs ++ ys) ++ [z]         = -- H.I.
+(reverse ys ++ reverse zs) ++ [z] = -- Prop. ++ assoc.
+#+end_src
+
+
+** Reverse
+
+- Caso recursivo (xs = z : zs). Suponha z, zs e ys arbitrários.
+  - H.I. ~reverse (zs + ys) = reverse ys ++ reverse zs~.
+
+#+begin_src haskell
+reverse ((z : zs) ++ ys)          = -- def. de ++
+reverse (z : (zs ++ ys))          = -- def. de reverse
+reverse (zs ++ ys) ++ [z]         = -- H.I.
+(reverse ys ++ reverse zs) ++ [z] = -- Prop. ++ assoc.
+reverse ys ++ (reverse zs ++ [z]) = -- def. de reverse
+#+end_src
+
+** Reverse
+
+- Caso recursivo (xs = z : zs). Suponha z, zs e ys arbitrários.
+  - H.I. ~reverse (zs + ys) = reverse ys ++ reverse zs~.
+
+#+begin_src haskell
+reverse ((z : zs) ++ ys)          = -- def. de ++
+reverse (z : (zs ++ ys))          = -- def. de reverse
+reverse (zs ++ ys) ++ [z]         = -- H.I.
+(reverse ys ++ reverse zs) ++ [z] = -- Prop. ++ assoc.
+reverse ys ++ (reverse zs ++ [z]) = -- def. de reverse
+reverse ys ++ (reverse (z : zs))
+#+end_src
+
+* Fold-map fusion
+
+** Fold-map fusion
+
+- Permite combinar duas operações sobre listas em uma única.
+  - Idéia subjacente ao framework map/reduce.
+
+#+begin_src haskell
+forall xs f g v.
+  (foldr g v . map f) xs = foldr (g . f) v xs
+#+end_src 
+
+** Fold-map fusion
+
+- Caso base (xs = []). Suponha f, g e v arbitrários.
+
+#+begin_src haskell
+(foldr g v . map f) [] = -- def. de (.)
+#+end_src
+
+
+** Fold-map fusion
+
+- Caso base (xs = []). Suponha f, g e v arbitrários.
+
+#+begin_src haskell
+(foldr g v . map f) [] = -- def. de (.)
+foldr g v (map f [])   = -- def. de map
+#+end_src
+
+
+** Fold-map fusion
+
+- Caso base (xs = []). Suponha f, g e v arbitrários.
+
+#+begin_src haskell
+(foldr g v . map f) [] = -- def. de (.)
+foldr g v (map f [])   = -- def. de map
+foldr g v []           = -- def. de foldr
+#+end_src
+
+
+** Fold-map fusion
+
+- Caso base (xs = []). Suponha f, g e v arbitrários.
+
+#+begin_src haskell
+(foldr g v . map f) [] = -- def. de (.)
+foldr g v (map f [])   = -- def. de map
+foldr g v []           = -- def. de foldr
+v                      = -- def. de foldr
+#+end_src
+
+
+** Fold-map fusion
+
+- Caso base (xs = []). Suponha f, g e v arbitrários.
+
+#+begin_src haskell
+(foldr g v . map f) [] = -- def. de (.)
+foldr g v (map f [])   = -- def. de map
+foldr g v []           = -- def. de foldr
+v                      = -- def. de foldr
+foldr (g . f) v []
+#+end_src
+
+** Fold-map fusion
+
+- Caso indutivo (xs = y : ys). Suponha f, g, v, y e ys arbitrários.
+  - H.I. (foldr g v . map f) ys = foldr (g . f) v ys.
+
+#+begin_src haskell
+(foldr g v . map f) (y : ys)       = -- def. de (.)
+#+end_src
+
+
+** Fold-map fusion
+
+- Caso indutivo (xs = y : ys). Suponha f, g, v, y e ys arbitrários.
+  - H.I. (foldr g v . map f) ys = foldr (g . f) v ys.
+
+#+begin_src haskell
+(foldr g v . map f) (y : ys)       = -- def. de (.)
+foldr g v (map f (y : ys))         = -- def. de map
+#+end_src
+
+
+** Fold-map fusion
+
+- Caso indutivo (xs = y : ys). Suponha f, g, v, y e ys arbitrários.
+  - H.I. (foldr g v . map f) ys = foldr (g . f) v ys.
+
+#+begin_src haskell
+(foldr g v . map f) (y : ys)       = -- def. de (.)
+foldr g v (map f (y : ys))         = -- def. de map
+foldr g v (f y : map f ys)         = -- def. de foldr
+#+end_src
+
+
+** Fold-map fusion
+
+- Caso indutivo (xs = y : ys). Suponha f, g, v, y e ys arbitrários.
+  - H.I. (foldr g v . map f) ys = foldr (g . f) v ys.
+
+#+begin_src haskell
+(foldr g v . map f) (y : ys)       = -- def. de (.)
+foldr g v (map f (y : ys))         = -- def. de map
+foldr g v (f y : map f ys)         = -- def. de foldr
+g (f y) (foldr g v (map f ys))     = -- def. de (.)
+#+end_src
+
+
+** Fold-map fusion
+
+- Caso indutivo (xs = y : ys). Suponha f, g, v, y e ys arbitrários.
+  - H.I. (foldr g v . map f) ys = foldr (g . f) v ys.
+
+#+begin_src haskell
+(foldr g v . map f) (y : ys)       = -- def. de (.)
+foldr g v (map f (y : ys))         = -- def. de map
+foldr g v (f y : map f ys)         = -- def. de foldr
+g (f y) (foldr g v (map f ys))     = -- def. de (.)
+(g . f) y ((foldr g v . map f) ys) = -- H.I.
+#+end_src
+
+
+** Fold-map fusion
+
+- Caso indutivo (xs = y : ys). Suponha f, g, v, y e ys arbitrários.
+  - H.I. (foldr g v . map f) ys = foldr (g . f) v ys.
+
+#+begin_src haskell
+(foldr g v . map f) (y : ys)       = -- def. de (.)
+foldr g v (map f (y : ys))         = -- def. de map
+foldr g v (f y : map f ys)         = -- def. de foldr
+g (f y) (foldr g v (map f ys))     = -- def. de (.)
+(g . f) y ((foldr g v . map f) ys) = -- H.I.
+(g . f) y (foldr (g . f) v ys)     = -- def. de foldr
+#+end_src
+
+
+** Fold-map fusion
+
+- Caso indutivo (xs = y : ys). Suponha f, g, v, y e ys arbitrários.
+  - H.I. (foldr g v . map f) ys = foldr (g . f) v ys.
+
+#+begin_src haskell
+(foldr g v . map f) (y : ys)       = -- def. de (.)
+foldr g v (map f (y : ys))         = -- def. de map
+foldr g v (f y : map f ys)         = -- def. de foldr
+g (f y) (foldr g v (map f ys))     = -- def. de (.)
+(g . f) y ((foldr g v . map f) ys) = -- H.I.
+(g . f) y (foldr (g . f) v ys)     = -- def. de foldr
+foldr (g . f) v (y : ys)
+#+end_src
+
+
+* Árvores
+
+** Árvores
+
+- Definição de árvores binárias
+
+#+begin_src haskell
+data Tree a
+    = Leaf
+    | Node a (Tree a) (Tree a)
+      deriving (Eq, Ord, Show)
+#+end_src
+
+** Árvores
+
+- Para provar propriedades sobre árvores binárias, basta provar:
+     - P(Leaf)
+     - forall l r x. P(l) -> P(r) -> P(Node x l r)
+
+** Árvores
+
+- Algumas funções
+
+#+begin_src haskell
+size :: Tree a -> Int
+size Leaf = 0
+size (Node _ l r) = 1 + size l + size r
+
+height :: Tree a -> Int
+height Leaf = 0
+height (Node _ l r) = 1 + max (height l) (height r)
+#+end_src
+
+** Árvores
+
+- Provar que:
+
+#+begin_src haskell
+forall t. height t <= size t
+#+end_src
+
+** Árvores
+
+- Caso base (t = Leaf):
+
+#+begin_src haskell
+height Leaf  = -- def. height
+#+end_src
+
+** Árvores
+
+- Caso base (t = Leaf):
+
+#+begin_src haskell
+height Leaf  = -- def. height
+0           <= -- aritmética
+#+end_src
+
+
+** Árvores
+
+- Caso base (t = Leaf):
+
+#+begin_src haskell
+height Leaf  = -- def. height
+0           <= -- aritmética
+0           = -- def. size
+#+end_src
+
+
+** Árvores
+
+- Caso base (t = Leaf):
+
+#+begin_src haskell
+height Leaf  = -- def. height
+0           <= -- aritmética
+0           =
+size Leaf
+#+end_src
+
+
+** Árvores
+
+- Caso recursivo: (t = Node x l r).
+  - HI1. height l <= size l
+  - HI2. height r <= size r.
+
+#+begin_src haskell
+height (Node x l r)           = -- def. de height
+#+end_src
+
+
+** Árvores
+
+- Caso recursivo: (t = Node x l r).
+  - HI1. height l <= size l
+  - HI2. height r <= size r.
+
+#+begin_src haskell
+height (Node x l r)           = -- def. de height
+1 + max (height l) (height r) <= -- H.I.
+#+end_src
+
+
+** Árvores
+
+- Caso recursivo: (t = Node x l r).
+  - HI1. height l <= size l
+  - HI2. height r <= size r.
+
+#+begin_src haskell
+height (Node x l r)           = -- def. de height
+1 + max (height l) (height r) <= -- H.I.
+1 + max (size l) (size r)     <= -- aritmética
+#+end_src
+
+
+** Árvores
+
+- Caso recursivo: (t = Node x l r).
+  - HI1. height l <= size l
+  - HI2. height r <= size r.
+
+#+begin_src haskell
+height (Node x l r)           = -- def. de height
+1 + max (height l) (height r) <= -- H.I.
+1 + max (size l) (size r)     <= -- aritmética
+1 + size l + size r           = -- def. de size
+#+end_src
+
+
+** Árvores
+
+- Caso recursivo: (t = Node x l r).
+  - HI1. height l <= size l
+  - HI2. height r <= size r.
+
+#+begin_src haskell
+height (Node x l r)           = -- def. de height
+1 + max (height l) (height r) <= -- H.I.
+1 + max (size l) (size r)     <= -- aritmética
+1 + size l + size r           =
+size (Node x l r)
+#+end_src
+
+* Exercícios
+
+** Exercício
+
+- Prove que a concatenação de listas é uma operação associativa, isto é:
+
+#+begin_src haskell 
+forall xs ys zs .
+    (xs ++ ys) ++ zs = xs ++ (ys ++ zs)
+#+end_src
+
