@@ -346,7 +346,7 @@ digits = [0..9]
 
 #+begin_src haskell :tangle yes :exports code
 toNumber :: [Int] -> Int
-toNumber = foldl (\ ac d -> ac * 10 + b) 0
+toNumber = foldl (\ ac d -> ac * 10 + d) 0
 #+end_src
 
 ** Mônada de lista
@@ -365,7 +365,7 @@ remove rs ls = foldl remove' ls rs
 - Resolvendo o puzzle.
 
 #+begin_src haskell :tangle yes :exports code
-solutions :: (Int,Int,Int)
+solutions :: [(Int,Int,Int)]
 solutions = do
    s <- remove [0] digits
    e <- remove [s] digits
@@ -373,8 +373,8 @@ solutions = do
    d <- remove [s,e,n] digits
    let send = toNumber [s, e, n, d]
    m <- remove [0,s,e,n,d] digits
-   o <- remove [0,s,e,n,d,m] digits
-   r <- remove [0,s,e,n,d,m,o] digits
+   o <- remove [s,e,n,d,m] digits
+   r <- remove [s,e,n,d,m,o] digits
    let more = toNumber [m, o, r, e]
    y <- remove [s,e,n,d,m,o,r] digits
    let money = toNumber [m,o,n,e,y]
