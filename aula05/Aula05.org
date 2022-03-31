@@ -545,7 +545,7 @@ doubleList' = map (\ x -> 2 * x)
 - Outra possibilidade de aplicação parcial é a de operadores.
     
 #+begin_src haskell
-(x #) = \ x -> x # y
+(x #) = \ y -> x # y
 (# y) = \ x -> x # y
 #+end_src
 
