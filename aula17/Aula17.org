@@ -1,0 +1,110 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Aula17.lagda
+#+PROPERTY: :header-args:agda2: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title: Introdução à linguagem Agda
+#+Author: Programação Funcional
+
+* Objetivos
+
+** Objetivos
+
+- Descrever o processo de instalação da linguagem Agda
+
+- Sintaxe da linguagem e uso do "IDE" de Agda
+
+** Setup
+
+#+begin_src agda :tangle yes :exports code
+module Aula17 where
+#+end_src
+
+* Instalação
+
+** Instalação
+
+- A linguagem Agda é desenvolvida usando Haskell.
+
+- A maneira mais prática de instalar a linguagem em sua máquina é usando o comando:
+
+#+begin_src shell
+stack install Agda-2.6.2.1
+#+end_src
+
+** Instalação
+
+- Editores para programação em Agda: VSCode e Emacs
+  - VSCode: extensão agda-mode
+  - Emacs: Agda-mode
+
+** Instalação
+
+- Depois de instalar seu editor favorito, crie o arquivo hello.agda com o seguinte conteúdo:
+
+#+begin_src agda :tangle yes :exports code
+data Greeting : Set where
+  hello : Greeting
+
+greet : Greeting
+greet = hello
+#+end_src
+
+* A linguagem Agda
+
+** A linguagem Agda
+
+- Sintaxe inspirada em Haskell
+
+- Diferenças
+   - Tipagem feita usando ~x : A~
+   - Uso de caracteres unicode ~A → B~
+   
+** A linguagem Agda
+
+- Similar a Haskell, programas Agda consistem de tipos de dados e funções definidas por casamento de padrão.
+
+** A linguagem Agda
+
+- Ao contrário de Haskell, não há imports automáticos de bibliotecas.
+
+- Você pode carregar módulos da biblioteca padrão ou mesmo definir tudo /do zero/.
+
+** A linguagem Agda
+
+- Definindo números naturais
+
+#+begin_src agda :exports code :tangle yes
+data ℕ : Set where
+  zero : ℕ
+  suc  : ℕ → ℕ
+
+{-# BUILTIN NATURAL ℕ #-}
+#+end_src
+
+** A linguagem Agda
+
+- Definindo a operação de adição
+
+#+begin_src agda :exports code :tangle yes
+_+_ : ℕ → ℕ → ℕ
+zero    + m = m
+(suc n) + m = suc (n + m)
+#+end_src
+
+* Programação interativa
+
+** Programação interativa
+
+- Vamos considerar o tipo de dados de booleanos
+
+#+begin_src agda :exports code :tangle yes
+data Bool : Set where
+  true false : Bool
+#+end_src
+
+

@@ -23,6 +23,13 @@ sumEvens xs = sum [x | x <- xs, even x]
 heads :: [[a]] -> [a]
 heads xss = [x | (x : _) <- xss]
 
+primes :: Int -> [Int]
+primes n = [x | x <- [2 .. n], isPrime x]
+    where
+      isPrime x = (length (factors x)) == 2
+      factors x = [ y | y <- [1 .. x]
+                      , x `mod` y == 0 ]
+
 qsort :: [Int] -> [Int]
 qsort []       = []
 qsort (pivot : xs) = smaller ++ [pivot] ++ greater

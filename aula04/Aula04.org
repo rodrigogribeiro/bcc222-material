@@ -214,13 +214,13 @@ primes n = [x | x <- [2 .. n], isPrime x]
   - Um número é primo se ele possui 2 fatores.
   - Um número é fator se o resto da divisão é zero.
 
-#+begin_src haskell
+#+begin_src haskell :tangle yes :exports code
 primes :: Int -> [Int]
 primes n = [x | x <- [2 .. n], isPrime x]
     where
-      isPrime x = (length factors) == 2
-      factors = [ y | y <- [1 .. x]
-                    , x `mod` y == 0 ]
+      isPrime x = (length (factors x)) == 2
+      factors x = [ y | y <- [1 .. x]
+                      , x `mod` y == 0 ]
 #+end_src
 
 ** Quicksort
