@@ -1,7 +1,7 @@
 #+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
 #+OPTIONS: tex t
 #+OPTIONS: timestamp:nil
-#+PROPERTY: tangle Aula09.hs
+#+PROPERTY: tangle Aula08.hs
 #+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
 #+REVEAL_THEME: white
 #+REVEAL_HLEVEL: 1
@@ -21,7 +21,7 @@
 
 #+begin_src haskell :tangle yes :exports code :results output
 {-# LANGUAGE InstanceSigs #-}
-module Aula09 where
+module Aula08 where
 #+end_src
 
 * Anteriormente...
@@ -32,7 +32,7 @@ module Aula09 where
 
 #+begin_src haskell
 reverse :: [a] -> [a]
-fst :: (a,b) -> a
+ fst :: (a,b) -> a
 #+end_src
 
 ** Anteriormente...
@@ -298,7 +298,7 @@ Prelude*>:t 3
 
 ** Tipos numéricos
 
-- Como ~3~ é sobrecarregado, podemos usá-lo como qualquer tipo instância de ~Num~:
+- Como 3 é sobrecarregado, podemos usá-lo como qualquer tipo instância de Num:
 
 #+begin_src haskell
 Prelude*> :t 3 :: Int
@@ -326,7 +326,7 @@ class Num a where
 
 - Sobrecarga de valores numéricos é feita pela função ~fromInteger~.
 
-- Isto é, ~3 :: Int~ é, na verdade, ~fromInteger 3~.
+- Isto é, 3 :: Int é, na verdade, fromInteger 3.
 
 - Isso permite a sobrecarga de valores quaisquer como números e expressões numéricas.
 

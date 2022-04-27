@@ -20,7 +20,7 @@
 
 ** Setup
 
-#+begin_src agda :tangle yes :exports code
+#+begin_src agda2 :tangle yes :exports code
 module Aula17 where
 #+end_src
 
@@ -46,7 +46,7 @@ stack install Agda-2.6.2.1
 
 - Depois de instalar seu editor favorito, crie o arquivo hello.agda com o seguinte conteúdo:
 
-#+begin_src agda :tangle yes :exports code
+#+begin_src agda2 :tangle yes :exports code
 data Greeting : Set where
   hello : Greeting
 
@@ -78,7 +78,7 @@ greet = hello
 
 - Definindo números naturais
 
-#+begin_src agda :exports code :tangle yes
+#+begin_src agda2 :exports code :tangle yes
 data ℕ : Set where
   zero : ℕ
   suc  : ℕ → ℕ
@@ -90,7 +90,7 @@ data ℕ : Set where
 
 - Definindo a operação de adição
 
-#+begin_src agda :exports code :tangle yes
+#+begin_src agda2 :exports code :tangle yes
 _+_ : ℕ → ℕ → ℕ
 zero    + m = m
 (suc n) + m = suc (n + m)
@@ -102,9 +102,36 @@ zero    + m = m
 
 - Vamos considerar o tipo de dados de booleanos
 
-#+begin_src agda :exports code :tangle yes
+#+begin_src agda2 :exports code :tangle yes
 data Bool : Set where
   true false : Bool
 #+end_src
 
+** Programação interativa
+
+- Desenvolvendo a negação.
+    - Vamos usar o recurso de desenvolvimento interativo.
+
+#+begin_src agda2 :exports code :tangle yes
+not : Bool → Bool
+not x = ?
+#+end_src
+
+** Programação interativa
+
+- Carregando um arquivo: Ctrl-c + Ctrl-l
+- Definição por casos: Ctrl-c + Ctrl-c
+- Apresentar valor: Ctrl-c + space
+
+* Hierarquia de tipos
+
+** Hierarquia de tipos
+
+- Em Agda, tipos possuem tipos.
+
+- Exemplo: Bool possui tipo Set.
+   - Set possui tipo Set₁
+   - Set₁ possui tipo Set₂ e assim por diante...
+
+** Hierarquia de tipos
 

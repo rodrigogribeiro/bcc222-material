@@ -22,7 +22,7 @@
 ** Setup
 
 #+begin_src haskell :tangle yes :exports code :results output
-module Aula 10 where
+module Aula10 where
 #+end_src
 
 * Estratégias de avaliação
@@ -288,7 +288,7 @@ primes = sieve [2 ..]
 primes :: [Integer]
 primes = sieve [2 ..]
   where
-    sieve (p : ns) = p : [x | x <- ns, x `mod` p == 0]
+    sieve (p : ns) = p : [x | x <- ns, x `mod` p /= 0]
 #+end_src
 
 
@@ -300,7 +300,7 @@ primes = sieve [2 ..]
 primes :: [Integer]
 primes = sieve [2 ..]
   where
-    sieve (p : ns) = p : sieve [x | x <- ns, x `mod` p == 0]
+    sieve (p : ns) = p : sieve [x | x <- ns, x `mod` p /= 0]
 #+end_src
 
 ** Avaliação sob demanda
@@ -394,7 +394,9 @@ approximations x0 n = iterate (next n) x0
 
 #+begin_src haskell :tangle yes :exports code :results output
 within :: Double -> [Double] -> Double
-within phi (x0 : x1 : xs) = if abs (x0 - x1) < phi then x1 else within phi (x1 : xs)
+within phi (x0 : x1 : xs)
+  | abs (x0 - x1) < phi = x1
+  | otherwise           = within phi (x1 : xs)
 #+end_src
 
 ** Estudo de caso
@@ -410,7 +412,7 @@ newton n = within 0.0001 (approximations (n / 2) n)
 
 - Exemplo
 
-#+begin_src haskell :tangle yes :exports code :results output
+#+begin_src haskell :results output
 newton 100
 #+end_src
 
