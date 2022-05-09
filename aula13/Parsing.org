@@ -1,0 +1,109 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Parser.hs
+#+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title: Parsing
+#+Author: Programação Funcional
+
+
+* Configuração inicial
+
+#+begin_src haskell :tangle yes :exports code :results output
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+module Parsing where
+
+import Data.Char
+#+end_src
+
+
+* Definição de parsing
+
+#+begin_src haskell :tangle yes :exports code :results output
+newtype Parser s a = Parser {runParser :: [s] -> [(a,[s])]}
+#+end_src
+
+* Definindo um parser para um símbolo
+
+#+begin_src haskell :tangle yes :exports code :results output
+symbol :: Eq s => s -> Parser s s
+symbol s = Parser (\ inp -> case inp of
+                              [] -> []
+                              (x : xs) -> if s == x then [(x,xs)]
+                                          else [])
+#+end_src   
+
+* Parser para um símbolo que atende uma condição
+
+#+begin_src haskell :tangle yes :exports code :results output
+sat :: (s -> Bool) -> Parser s s
+sat p = Parser (\ inp -> case inp of
+                              [] -> []
+                              (x : xs) -> if p x then [(x,xs)]
+                                          else [])
+#+end_src
+
+* Definindo um parser para um string
+
+#+begin_src haskell :tangle yes :exports code :results output
+token :: Eq s => [s] -> Parser s [s]
+token s []  = []
+token s inp = Parser (\ inp -> case inp of
+                              [] -> []
+                              s -> if s == pref then [(pref,suf)]
+                                   else [])
+        where
+           n = length s
+           pref = take n inp
+           suf  = drop n inp
+#+end_src
+    
+
+* Definindo um parser para um dígito (caracter)
+
+#+begin_src haskell :tangle yes :exports code :results output
+digitChar :: Parser Char Char
+digitChar = sat isDigit
+#+end_src
+
+* Instância de Functor
+
+#+begin_src haskell :tangle yes :exports code :results output
+instance Functor (Parser s) where
+   fmap f p = \ inp -> [(f x, r) | (x,r) <- p inp] 
+#+end_src
+
+* Definindo um parser para um dígito (inteiro)
+
+
+* Succeed e Fail
+
+* Alternativa
+
+* Sequência (instância de applicative)
+
+* Option
+
+* Many e Many1
+
+* Parsing de números
+
+* Descartando resultados intermediários
+
+* Greedy e Greedy1
+
+* ListOf (separadores)
+
+* EndBy
+
+* Modelando CSV
+
+#+begin_src haskell :tangle yes :exports code :results output
+type CSV = [Line]
+type Line = [Cell]
+type Cell = String
+#+end_src

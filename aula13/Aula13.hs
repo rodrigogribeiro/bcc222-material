@@ -64,10 +64,7 @@ ex1 :: Parser Char String
 ex1 = token "ab" <|> token "ba"
 
 data Paren = Match Paren Paren | Empty
-
-instance Show Paren where
-   show Empty = ""
-   show (Match p p') = "(" ++ show p ++ ")" ++ show p'
+             deriving Show
 
 open :: Parser Char Char
 open = symbol '('
@@ -76,7 +73,9 @@ close :: Parser Char Char
 close = symbol ')'
 
 parens :: Parser Char Paren
-parens = (f <$> open <*> parens <*> close <*> parens)
+parens = (f <$> open <*> parens
+                     <*> close
+                     <*> parens)
          <|> succeed Empty
          where
            f _ p _ p' = Match p p'

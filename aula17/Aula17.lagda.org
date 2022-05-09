@@ -14,9 +14,15 @@
 
 ** Objetivos
 
-- Descrever o processo de instalação da linguagem Agda
+- Descrever o processo de instalação da linguagem Agda.
 
-- Sintaxe da linguagem e uso do "IDE" de Agda
+- Sintaxe da linguagem e uso do "IDE" de Agda.
+
+** Objetivos
+
+- Descrever sobre a hierarquia de tipos de Agda.
+
+- Apresentar as restrições de totalidade da linguagem.
 
 ** Setup
 
@@ -114,7 +120,7 @@ data Bool : Set where
 
 #+begin_src agda2 :exports code :tangle yes
 not : Bool → Bool
-not x = ?
+not x = {!!}
 #+end_src
 
 ** Programação interativa
@@ -134,4 +140,104 @@ not x = ?
    - Set₁ possui tipo Set₂ e assim por diante...
 
 ** Hierarquia de tipos
+
+- Usando Set, podemos implementar funções polimórficas.
+
+#+begin_src agda2 :tangle yes :exports code
+id₁ : (A : Set) → A → A
+id₁ A x = x
+#+end_src
+
+** Hierarquia de tipos
+
+- Usando chaves podemos declarar argumentos implícitos
+   - Implícitos: calculados pelo compilador
+
+#+begin_src agda2 :tangle yes :exports code
+id₂ : {A : Set} → A → A
+id₂ x = x
+#+end_src
+
+** Hierarquia de tipos
+
+- Definindo if como uma função polimórfica
+
+#+begin_src agda2 :tangle yes :exports code
+if_then_else_ : {A : Set} → Bool → A → A → A
+if true  then x else _ = x
+if false then _ else y = y
+#+end_src
+
+** Hierarquia de tipos
+
+- Definindo tipos polimórficos
+
+#+begin_src agda2 :tangle yes :exports code
+data List (A : Set) : Set where
+  []  : List A
+  _∷_ : A → List A → List A
+#+end_src
+
+** Hierarquia de tipos
+
+- Definindo registros
+  - Definem projeções para cada campo.
+  - Permitem a definição de construtores.
+
+#+begin_src agda2 :tangle yes :exports code
+record _×_ (A B : Set) : Set where
+  constructor _,_
+  field
+    fst : A
+    snd : B
+#+end_src
+
+* Totalidade
+
+** Totalidade
+
+- Ao contrário de Haskell, Agda exige que:
+    - Todas as funções façam casamento de padrão exaustivo.
+    - Toda função deve terminar, isto é, não é permitido que código entre em loop.
+
+** Totalidade
+
+- Exemplo: Casamento de padrão não exaustivo
+
+#+begin_src
+foo : Bool → Bool
+foo false = true
+#+end_src
+
+** Totalidade
+
+- Exemplo: Não terminação
+
+#+begin_src
+faa : Bool → Bool
+faa x = faa x
+#+end_src
+
+** Totalidade
+
+- Essas restrições são necessárias para garantir a consistência lógica de Agda.
+
+** Totalidade
+
+- Agda pode ser utilizada para provar resultados da matemática ou correção de software.
+
+* Exercícios
+
+** Exercícios
+
+- Desenvolva as seguintes funções em Agda:
+
+#+begin_src
+-- número de elementos em uma lista
+length : {A : Set} → List A → ℕ
+-- concatenação
+_++_ : {A : Set} → List A → List A → List A
+-- map
+map : {A B : Set} → (A → B) → List A → List B
+#+end_src
 

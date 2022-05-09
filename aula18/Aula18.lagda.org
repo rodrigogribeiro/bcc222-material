@@ -1,0 +1,470 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Aula18.lagda
+#+PROPERTY: :header-args:agda2: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title: Introdução à linguagem Agda
+#+Author: Programação Funcional
+
+* Objetivos
+
+** Objetivos
+
+- Apresentar o conceito de tipos dependentes e como esses podem ser utilizados para expressar propriedades de programas.
+
+** Objetivos
+
+- Apresentar como tipos Agda podem ser utilizados para representar fórmulas da lógica e suas demonstrações.
+
+** Setup
+
+#+begin_src agda2 :tangle yes :exports code
+module Aula18 where
+
+open import Data.Bool
+open import Data.List as L
+open import Data.Nat
+#+end_src
+
+* Tipos Dependentes
+
+** Tipos Dependentes
+
+- Tipo dependente: tipo que referem-se a partes de um programa.
+
+- Qual a utilidade deste conceito?
+
+** Tipos Dependentes
+
+- Problema comum em programa: acesso a posições inválidas em arranjos.
+
+#+begin_src java
+public class NewClass2 {
+    public static void main(String[] args)
+    {
+        int ar[] = { 1, 2, 3, 4, 5 };
+        for (int i = 0; i <= ar.length; i++)
+            System.out.println(ar[i]);
+    }
+}
+#+end_src
+
+** Tipos Dependentes
+
+- Seria possível um compilador capturar esses erros?
+
+- Sim, se o tipo possuir informação sobre o tamanho de uma lista / arranjo.
+
+** Tipos Dependentes
+
+- Exemplo: Vectors - listas indexadas por tamanho.
+
+#+begin_src agda2 :tangle yes :exports code
+data Vec (A : Set) : ℕ → Set where
+  []  : Vec A 0
+  _∷_ : {n : ℕ} → A → Vec A n → Vec A (suc n)
+
+infixr 5 _∷_
+#+end_src
+
+
+** Tipos Dependentes
+
+- Exemplos
+
+#+begin_src agda2 :tangle yes :exports code
+ex1 : Vec ℕ 1
+ex1 = 0 ∷ []
+
+ex2 : Vec ℕ 3
+ex2 = 1 ∷ 2 ∷ ex1
+#+end_src
+
+** Tipos Dependentes
+
+- Propriedade da concatenação de listas:
+
+#+begin_src
+length (xs ++ ys) = length xs + length ys
+#+end_src
+
+** Tipos Dependentes
+
+- Usando tipos dependentes podemos garantir que essa propriedade seja atendida pela concatenação.
+
+#+begin_src agda2 :tangle yes :exports code
+_++V_ : {A : Set}{n m : ℕ} → Vec A n → Vec A m → Vec A (n + m)
+[]       ++V ys = ys
+(x ∷ xs) ++V ys = x ∷ (xs ++V ys)
+#+end_src
+
+** Tipos Dependentes
+
+- Outro exemplo: implementar uma função para recuperar a cabeça de uma lista.
+    - Em Haskell, usamos uma função parcial...
+
+#+begin_src haskell
+head : [a] -> a
+head [] = error "Empty list!"
+head (x : xs) = x
+#+end_src
+
+** Tipos Dependentes
+
+- Em Agda, podemos definir head de forma que seja aplicada apenas a listas não vazias.
+
+#+begin_src agda2 :tangle yes :exports code
+head-vec : {A : Set}{n : ℕ} → Vec A (suc n) → A
+head-vec (x ∷ _) = x
+#+end_src
+
+** Tipos Dependentes
+
+- Usando tipos dependentes, conseguimos resolver alguns problemas.
+   - Concatenação correta por construção.
+   - Definição de head para listas não vazias.
+
+** Tipos Dependentes
+
+- Porém, como resolver o problema de acesso a posições inválidas?
+
+** Tipos Dependentes
+
+- Para isso, devemos restringir os valores de possíveis posições ao tamanho da lista.
+
+** Tipos Dependentes
+
+- Representando posições utilizando conjuntos finitos.
+
+#+begin_src agda2 :tangle yes :exports code
+data Fin : ℕ → Set where
+  zero : {n : ℕ} → Fin (suc n)
+  suc  : {n : ℕ} → Fin n → Fin (suc n)
+#+end_src
+
+** Tipos Dependentes
+
+- Usando o tipo Fin, podemos definir a função para acessar o elemento em uma posição
+representada por um valor do tipo Fin.
+
+#+begin_src agda2 :tangle yes :exports code
+lookup-vec : {A : Set}{n : ℕ} → Vec A n → Fin n → A
+lookup-vec (x ∷ _)  zero      = x
+lookup-vec (_ ∷ xs) (suc idx) = lookup-vec xs idx
+#+end_src
+
+* Propositions as Types
+
+** Propositions as Types
+
+- Em Agda, podemos representar fórmulas da lógica como tipos da linguagem.
+
+- Programas possuindo esses tipos consistem de provas destas fórmulas.
+
+** Propositions as Types
+
+- Conjunção
+   - Dizemos que A ∧ B é verdadeiro se temos deduções de A e de B
+   - Logo, representamos a conjunção por um par de deduções.
+
+** Propositions as Types
+
+- Representando a conjunção
+
+#+begin_src agda2 :tangle yes :exports code
+record _×_ (A B : Set) : Set where
+  constructor _,_
+  field
+    fst : A
+    snd : B
+#+end_src
+
+** Propositions as Types
+
+- Implicações são representadas como tipos funcionais.
+
+- Deduções de implicações são funções!
+
+** Propositions as Types
+
+- Exemplo: (B → C) → (A → B) → (A → C)
+
+#+begin_src agda2 :tangle yes :exports code
+_∘_ : {A B C : Set} → (B → C) → (A → B) → (A → C)
+f ∘ g = λ pA → f (g pA) 
+#+end_src
+
+** Propositions as Types
+
+- Exemplo: provando que A ∧ B → B ∧ A
+
+#+begin_src agda2 :tangle yes :exports code
+and-comm : {A B : Set} → A × B → B × A
+and-comm (pA , pB) = pB , pA
+#+end_src
+
+** Propositions as Types
+
+- Exemplo: comutatividade do ∧
+
+#+begin_src agda2 :tangle yes :exports code
+and-assoc : {A B C : Set} → A × (B × C) → (A × B) × C
+and-assoc (pA , (pB , pC)) = (pA , pB) , pC
+#+end_src
+
+
+** Propositions as Types
+
+- Disjunção
+  - Dizemos que A ∨ B é verdadeiro se temos uma prova de A ou de B.
+
+** Propositions as Types
+
+- Representando a disjunção
+
+#+begin_src agda2 :tangle yes :exports code
+data _⊎_ (A B : Set) : Set where
+  left  : A → A ⊎ B
+  right : B → A ⊎ B
+#+end_src
+
+** Propositions as Types
+
+- Representando a eliminação do ∨
+
+#+begin_src agda2 :tangle yes :exports code
+⊎-elim : {A B C : Set} → A ⊎ B → (A → C) → (B → C) → C
+⊎-elim (left pA)  f _ = f pA
+⊎-elim (right pB) _ g = g pB
+#+end_src
+
+** Propositions as Types
+
+- Exemplo: A ⊎ B → B ⊎ A
+
+#+begin_src agda2 :tangle yes :exports code
+⊎-comm : {A B C : Set} → A ⊎ B → B ⊎ A
+⊎-comm (left pA)  = right pA
+⊎-comm (right pB) = left pB
+#+end_src
+
+** Propositions as Types
+
+- A constante verdadeiro é representada por uma tipo com único construtor.
+
+#+begin_src agda2 :tangle yes :exports code
+data ⊤ : Set where
+  tt : ⊤
+#+end_src
+
+** Propositions as Types
+
+- A constante falso é representada por um tipo sem construtores.
+  - Impossível de construir uma dedução diretamente.
+
+#+begin_src agda2 :tangle yes :exports code
+data ⊥ : Set where
+#+end_src
+
+** Propositions as Types
+
+- A partir de ⊥, podemos deduzir qualquer proposição
+
+#+begin_src agda2 :tangle yes :exports code
+⊥-elim : {A : Set} → ⊥ → A
+⊥-elim ()
+#+end_src
+
+** Propositions as Types
+
+- Negação é representada em termos da implicação.
+
+#+begin_src agda2 :tangle yes :exports code
+¬_ : Set → Set
+¬ A = A → ⊥
+#+end_src
+
+* Lógica de Predicados
+
+** Lógica de Predicados
+
+- Podemos representar predicados usando tipos indutivos.
+
+#+begin_src agda2 :tangle yes :exports code
+data Even : ℕ → Set where
+  zero : Even 0
+  2+_  : {n : ℕ} → Even n → Even (2 + n)
+#+end_src
+
+** Lógica de Predicados
+
+- Exemplo: demonstrando Even 8
+
+#+begin_src agda2 :tangle yes :exports code
+8-Even : Even 8
+8-Even = 2+ (2+ (2+ (2+ zero)))
+#+end_src
+
+** Lógica de Predicados
+
+- Exemplo: demonstrando que não é provavel que Even 5.
+
+#+begin_src agda2 :tangle yes :exports code
+5-Even : ¬ Even 5
+5-Even (2+ (2+ ()))
+#+end_src
+
+** Lógica de Predicados
+
+- Quantificador universal
+   - Para demonstrar ∀ x. P(x) devemos deduzir P(v) para cada valor v.
+   - Podemos fazer isso usando uma função λ v → p, em que p é uma dedução de P(v).
+
+** Lógica de Predicados
+
+- Exemplo:
+
+#+begin_src agda2 :tangle yes :exports code
+double : ℕ → ℕ
+double zero    = zero
+double (suc n) = suc (suc (double n))
+
+doubleEven : ∀ (n : ℕ) → Even (double n)
+doubleEven zero    = zero
+doubleEven (suc n) = 2+ doubleEven n
+#+end_src
+
+
+** Lógica de Predicados
+
+- Quantificador existencial
+   - Para provar ∃ x. P(x) precisamos de um valor v e da dedução de P(v).
+   - A demonstração de um existencial consiste de um par, chamado de produto dependente.
+
+** Lógica de Predicados
+
+- Definição de produto dependente.
+
+#+begin_src agda2 :tangle yes :exports code
+record Σ (A : Set)(B : A → Set) : Set where
+  constructor _,_
+  field
+    witness : A
+    proof   : B witness
+open Σ
+#+end_src
+
+** Lógica de Predicados
+
+- Representando o quantificador existencial.
+
+#+begin_src agda2 :tangle yes :exports code
+∃_ : {A : Set} → (A → Set) → Set
+∃_ {A} p = Σ A p
+#+end_src
+
+** Lógica de Predicados
+
+- Exemplo: Se Even n é válido então existe m tal que n = 2 * m.
+
+- Como formalizar esse resultado?
+
+** Lógica de Predicados
+
+- Para isso, vamos precisar de um teste de igualdade para números.
+
+#+begin_src agda2 :tangle yes :exports code
+_=N_ : ℕ → ℕ → Bool
+zero  =N zero  = true
+zero  =N suc m = false
+suc n =N zero  = false
+suc n =N suc m = n =N m
+#+end_src 
+
+** Lógica de Predicados
+
+- Exemplo: predicado para garantir que um booleano é verdadeiro.
+
+#+begin_src agda2 :tangle yes :exports code
+data IsTrue : Bool → Set where
+  is-true : IsTrue true
+#+end_src
+
+** Lógica de Predicados
+
+- Exemplo:
+
+#+begin_src agda2 :tangle yes :exports code
+_ : IsTrue (L.length (1 L.∷ 2 L.∷ 3 L.∷ L.[]) =N 3)
+_ = is-true
+#+end_src
+
+** Lógica de Predicados
+
+- Apesar de funcionar, o uso do predicado IsTrue e da função é inconveniente.
+
+- Há uma representação melhor da igualdade?
+
+** Lógica de Predicados
+
+- Igualdade proposicional
+
+#+begin_src agda2 :tangle yes :exports code
+data _≡_ {A : Set} : A → A → Set where
+  refl : {x : A} → x ≡ x
+
+infix 4 _≡_
+#+end_src
+
+** Lógica de Predicados
+
+- Exemplo:
+
+#+begin_src agda2 :tangle yes :exports code
+easy : 1 + 1 ≡ 2
+easy = refl
+
+obvious : ¬ (1 ≡ 2)
+obvious ()
+#+end_src
+
+** Lógica de Predicados
+
+- Propriedades da igualdade: simetria
+
+#+begin_src agda2 :tangle yes :exports code
+sym : {A : Set}{x y : A} → x ≡ y → y ≡ x
+sym refl = refl
+#+end_src
+
+** Lógica de Predicados
+
+- Propriedades da igualdade: transitividade
+
+#+begin_src agda2 :tangle yes :exports code
+trans : {A : Set}{x y z : A} → x ≡ y → y ≡ z → x ≡ z
+trans refl refl = refl
+#+end_src
+
+** Lógica de Predicados
+
+- Propriedades da igualdade: congruência
+
+#+begin_src agda2 :tangle yes :exports code
+cong : {A B : Set}{x y : A}(f : A → B) → x ≡ y → f x ≡ f y
+cong f refl = refl
+#+end_src
+
+
+* Exercícios
+
+** Exercícios
+
+- Implemente funções Agda que provam as seguintes tautologias da lógica.
+    - (A \to B \to C) \to ((A \land B) \to C)
+    - (A \land (B \lor C)) \to (A \land B) \or (A \land C)
+

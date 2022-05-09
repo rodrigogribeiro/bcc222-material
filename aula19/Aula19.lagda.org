@@ -1,0 +1,204 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Aula19.lagda
+#+PROPERTY: :header-args:agda2: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title: Introdução à linguagem Agda
+#+Author: Programação Funcional
+
+
+* Objetivos
+
+** Objetivos
+
+- Apresentar como representar provas por equações em Agda.
+
+- Apresentar como representar provas por indução em Agda.
+
+** Setup
+
+#+begin_src agda2 :tangle yes :output code
+module Aula19 where
+
+open import Data.Bool
+open import Data.Nat
+open import Data.List hiding (reverse ; [_])
+
+infix 4 _≡_
+
+data _≡_ {A : Set} : A → A → Set where
+  refl : {x : A} → x ≡ x
+
+sym : {A : Set}{x y : A} → x ≡ y → y ≡ x
+sym refl = refl
+
+trans : {A : Set}{x y z : A} → x ≡ y → y ≡ z → x ≡ z
+trans refl refl = refl
+
+cong : {A B : Set}{x y : A}(f : A → B) → x ≡ y → f x ≡ f y
+cong f refl = refl
+#+end_src
+
+* Equações em deduções
+
+** Equações em deduções
+
+- Agda permite definir operadores com uma sintaxe bastante expressiva.
+
+- Vamos usar esse recurso para definir funções para codificar raciocínio por equações.
+
+** Equações em deduções
+
+- Iniciando e terminando uma sequencia de equações
+
+#+begin_src agda2 :tangle yes :exports code
+infix 1 begin_
+infix 3 _end
+
+begin_ : {A : Set} → {x y : A} → x ≡ y → x ≡ y
+begin p = p
+
+_end : {A : Set} → (x : A) → x ≡ x
+x end = refl
+#+end_src
+
+** Equações em deduções
+
+- Combinando equações
+
+#+begin_src agda2 :tangle yes :exports code
+infixr 2 _≡⟨_⟩_
+infixr 2 _≡⟨⟩_
+
+_≡⟨_⟩_ : {A : Set} → (x : A) → {y z : A} → x ≡ y → y ≡ z → x ≡ z
+x ≡⟨ p ⟩ q = trans p q
+
+_≡⟨⟩_ : {A : Set} → (x : A) → {y : A} → x ≡ y → x ≡ y
+x ≡⟨⟩ q = x ≡⟨ refl ⟩ q
+#+end_src
+
+** Equações em deduções
+
+- Invertendo uma lista.
+
+#+begin_src agda2 :tangle yes :exports code
+[_] : {A : Set} → A → List A
+[ x ] = x ∷ []
+
+reverse : {A : Set} → List A → List A
+reverse [] = []
+reverse (x ∷ xs) = reverse xs ++ [ x ]
+#+end_src
+
+** Equações em deduções
+
+- Exemplo: mostrando que reverse [ x ] ≡ [ x ]
+
+#+begin_src agda2 :tangle yes :exports code
+reverse-single : {A : Set}(x : A) → reverse [ x ] ≡ [ x ]
+reverse-single x
+  = begin
+      reverse [ x ]
+    ≡⟨⟩ -- definition of [_]
+      reverse (x ∷ [])
+    ≡⟨⟩
+      reverse [] ++ [ x ]
+    ≡⟨⟩
+      [] ++ [ x ]
+    ≡⟨⟩
+      [ x ]
+    end
+#+end_src
+
+** Equações em deduções
+
+- Exemplo: provando que not (not b) ≡ b
+
+#+begin_src agda2 :tangle yes :exports code
+not-inv : (b : Bool) → not (not b) ≡ b
+not-inv false
+  = begin
+       not (not false)
+     ≡⟨⟩
+       not true
+     ≡⟨⟩
+       false
+     end
+not-inv true
+  = begin
+       not (not true)
+     ≡⟨⟩
+       not false
+     ≡⟨⟩
+       true
+     end
+#+end_src
+
+** Equações em deduções
+
+- Vimos um exemplo de dedução envolvendo análise de casos
+
+- Mas como representar indução?
+
+** Equações em deduções
+
+- Representamos a indução como uma função recursiva.
+
+** Equações em deduções
+
+- Exemplo
+
+#+begin_src agda2 :tangle yes :exports code
+plus-zero-r : (n : ℕ) → n + 0 ≡ n
+plus-zero-r 0
+  = begin
+      0 + 0
+    ≡⟨⟩
+      0
+    end
+plus-zero-r (suc n)
+  = begin
+      (suc n) + 0
+    ≡⟨⟩
+      suc (n + 0)
+    ≡⟨ cong suc (plus-zero-r n) ⟩
+      suc n
+    end
+#+end_src
+
+
+** Equações em deduções
+
+- Exemplo: concatenação e length
+
+#+begin_src agda2 :tangle yes :exports code
+length-++ : {A : Set}(xs ys : List A) → length (xs ++ ys) ≡ length xs + length ys
+length-++ {A} [] ys
+  = begin
+       length ([] ++ ys)
+     ≡⟨⟩
+       length ys
+     ≡⟨⟩
+       0 + length ys
+     ≡⟨⟩
+       length {A = A} [] + length ys
+     end
+length-++ (x ∷ xs) ys
+  = begin
+       length ((x ∷ xs) ++ ys)
+     ≡⟨⟩
+       length (x ∷ (xs ++ ys))
+     ≡⟨⟩
+       1 + length (xs ++ ys)
+     ≡⟨ cong (1 +_) (length-++ xs ys) ⟩
+       1 + (length xs + length ys)
+     ≡⟨⟩
+       (1 + length xs) + length ys
+     ≡⟨⟩
+       length (x ∷ xs) + length ys
+     end
+#+end_src

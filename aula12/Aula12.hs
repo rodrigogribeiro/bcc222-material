@@ -26,6 +26,9 @@ data Rose a
     deriving (Eq, Ord, Show)
 
 instance Functor Rose where
+  -- fmap :: (c -> d)
+  --      -> Rose c
+  --      -> Rose d
   fmap f (Rose x ts)
     = Rose (f x) ((fmap f) <$> ts)
 
@@ -53,7 +56,8 @@ contains x xs
   | otherwise   = Nothing
 
 mkAddress :: String -> Maybe Address
-mkAddress s = Address <$> contains '@' s
+mkAddress s
+  = Address <$> contains '@' s
 
 mkBody :: String -> Maybe Body
 mkBody s = Body <$> nonEmpty s

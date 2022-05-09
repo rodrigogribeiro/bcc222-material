@@ -216,10 +216,7 @@ S & \to & (S)\,S\:\mid\epsilon
 
 #+begin_src haskell :tangle yes :exports code
 data Paren = Match Paren Paren | Empty
-
-instance Show Paren where
-   show Empty = ""
-   show (Match p p') = "(" ++ show p ++ ")" ++ show p'
+             deriving Show
 #+end_src
 
 ** Parsing
@@ -227,17 +224,19 @@ instance Show Paren where
 - Definição do parser.
 
 #+begin_src haskell :tangle yes :exports code
-open :: Parser Char Char
-open = symbol '('
+    open :: Parser Char Char
+    open = symbol '('
 
-close :: Parser Char Char
-close = symbol ')'
+    close :: Parser Char Char
+    close = symbol ')'
 
-parens :: Parser Char Paren
-parens = (f <$> open <*> parens <*> close <*> parens)
-         <|> succeed Empty
-         where
-           f _ p _ p' = Match p p'
+    parens :: Parser Char Paren
+    parens = (f <$> open <*> parens
+                         <*> close
+                         <*> parens)
+             <|> succeed Empty
+             where
+               f _ p _ p' = Match p p'
 #+end_src
 
 ** Parsing
