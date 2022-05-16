@@ -15,5 +15,5 @@ tests = testGroup "testes"
             [
               testProperty "reverse" $
                  \ (xs :: [Int]) ->
-                      (reverse xs) == xs
+                      reverse (reverse xs) == xs
             ]
