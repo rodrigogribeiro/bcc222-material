@@ -73,8 +73,7 @@ startGameWithWord n s
 updateGameState :: Char -> GameState -> GameState
 updateGameState _ [] = []
 updateGameState c ((c', p) : s')
-  | c == c' && isNothing p
-  = (c, Just c) : updateGameState c s'
+  | c == c' && isNothing p = (c, Just c) : updateGameState c s'
   | otherwise = (c',p) : updateGameState c s'
 
 

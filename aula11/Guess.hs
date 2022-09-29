@@ -1,4 +1,4 @@
-module Guess where
+module Main where
 
 import Data.Char (isDigit)
 import System.Environment (getArgs)

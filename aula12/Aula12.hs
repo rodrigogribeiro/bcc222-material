@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications #-}
 module Aula12 where
 
 mapMay :: (a -> b) -> Maybe a -> Maybe b

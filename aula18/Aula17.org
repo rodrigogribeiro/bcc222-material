@@ -1,7 +1,7 @@
 #+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
 #+OPTIONS: tex t
 #+OPTIONS: timestamp:nil
-#+PROPERTY: tangle Aula14.hs
+#+PROPERTY: tangle Aula17.hs
 #+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
 #+REVEAL_THEME: white
 #+REVEAL_HLEVEL: 1
@@ -19,7 +19,7 @@
 ** Setup
 
 #+begin_src haskell :exports code :tangle yes :result output
-module Aula14 where
+module Aula17 where
 #+end_src
 
 * Registros
@@ -541,9 +541,10 @@ name
 #+end_src
 
 
-** Exemplo
+Exemplo
+=======
 
-#+begin_src haskell
+```haskell
 data Employee
   = Employee {
        _name   :: String
@@ -556,11 +557,12 @@ name fs (Employee n s)
 
 joe :: Employee
 joe = Employee "Joe" 100
-#+end_src
+```
 
-** View
+View
+====
 
-#+begin_src haskell
+```haskell
 view name (Employee "Joe" 100) ==>
 -- substituindo view
 getConst (name Const (Employee "Joe" 100)) ==>
@@ -570,63 +572,69 @@ getConst (fmap (\ n' -> Employee n' 100) (Const "Joe")) ==>
 getConst (Const "Joe") ==>
 -- getConst (Const v) = v
 "Joe"
-#+end_src
+```
 
-** Composição
+Composição
+==========
 
 - Composição de lenses tem o tipo:
 
-#+begin_src haskell
+```haskell
 Lens s s1 -> Lens s1 a -> Lens s a
    ln1         ln2
-#+end_src
+```
 
 - que expandido resulta em
 
-#+begin_src haskell
+```haskell
 ln1 :: (s1 -> f s1) -> s  -> f s
 ln2 :: (a  -> f a ) -> s1 -> f s1
-#+end_src
+```
 
-** Composição
+Composição
+==========
 
 - Logo, o tipo de `ln1 . ln2` é:
 
-#+begin_src haskell
+```haskell
 (a -> f a) -> s -> f s
-#+end_src
+```
 
 que é exatamente `Lens s a`.
 
-- Composição de lenses é composição de funções.
+- Composição de lenses é composição
+  de funções.
 
-** Operadores
+Operadores
+==========
 
 - Notação para view and set.
 
-#+begin_src haskell
+```haskell
 (^.) :: s -> Lens s a -> a
 s ^. ln = view ln s
 
 (~.) :: Lens s a -> a -> s -> s
 (~.) = set
-#+end_src
+```
 
-** Exemplos
+Exemplos
+========
 
 - Retornando aos dados de exemplo
 
-#+begin_src haskell
+```haskell
 pex :: Person
 pex = Person "João" 30 addex
 
 addex :: Address
 addex = Address "Rua A" "São Pedro" "123"
-#+end_src
+```
 
-** Exemplos
+Exemplos
+========
 
-#+begin_src haskell
+```haskell
 Person> pex ^. (address . street)
 "Rua A"
 Person> (pex & name ~. "Carlos") ^. name
@@ -635,15 +643,16 @@ Person> (pex & name ~. "Carlos") ^. name
 Person> let street' = address . street
 Person> (pex & street' ~. "Baker Street") ^. street'
 "Baker Street"
-#+end_src
+```
 
-** Aplicações
+Aplicações
+==========
 
 - "Campos virtuais"
     - Campo Farenheint pode ser atualizado,
       consultado sem existir!
 
-#+begin_src haskell
+```haskell
 data Temp = Temp { _celsius :: Float } deriving Show
 
 celsius :: Lens Temp Float
@@ -654,14 +663,16 @@ farenheint f (Temp c)
   = (\ fa -> Temp (ftc fa)) <$> (f (ctf c))
 
 -- ftc, ctf :: Float -> Float
-#+end_src
 
-** Aplicações
+```
+
+Aplicações
+==========
 
 - Manter invariantes.
   - Modificar valores de horas.
 
-#+begin_src haskell
+```haskell
 data Time
   = Time {
       _hours :: Int
@@ -670,13 +681,14 @@ data Time
 
 now :: Time
 now = Time 3 58
-#+end_src
+```
 
-** Aplicações
+Aplicações
+==========
 
 - Manter invariantes
 
-#+begin_src haskell
+```haskell
 mins :: Lens Time Int
 mins f (Time h m)
   = wrap <$> (f m)
@@ -686,44 +698,54 @@ mins f (Time h m)
       | m' >= 60  = Time (h + 1) (m' - 60)
       | m' < 0    = Time (h - 1) (m' + 60)
       | otherwise = Time h m'
-#+end_src
+```
 
-** Aplicações
+Aplicações
+==========
 
 - Manter invariantes
 
-#+begin_src haskell
+```haskell
 Prelude> over (+ 4) now
 Time 4 2
-#+end_src
+```
 
-** Problema
+Problema
+========
 
-- Como converter a rua e cidade do endereço de uma pessoa para letras minúsculas?
+- Como converter a rua e cidade
+  do endereço de uma pessoa para
+  letras minúsculas?
 
-** Problema
+Problema
+========
 
-- Usando nossa solução atual, temos que realizar duas atualizações.
+- Usando nossa solução atual,
+  temos que realizar duas
+  atualizações.
 
 - Como fazer em um único passo?
 
-** Solução
+Solução
+=======
 
 - Applicative Lenses!
-    - Permite "focar" em múltiplos valores de uma estrutura.
+    - Permite "focar" em múltiplos valores de uma
+      estrutura.
 - Definição:
 
-#+begin_src haskell
+```haskell
 type ALens s a
   = forall f. Applicative f => (a -> f a) -> s -> f s
-#+end_src
+```
 
-** Set
+Set
+===
 
 - A definição de set para `Lens` funciona para `ALens`!
    - Identity como instância de Applicative.
 
-#+begin_src haskell
+```haskell
 instance Applicative Identity where
   pure = Identity
   (Identity f) <*> (Identity v)
@@ -734,48 +756,52 @@ set ln a s
   = runIdentity (ln set_fld s)
   where
     set_fld _ = Identity a
-#+end_src
+```
 
-** view?
+view?
+=====
 
 - A implementação de view é a mesma?
-    - Não! Como combinar vários valores?
+    - Não! Como combinar vários valores
     - Lembre-se o functor de view é Const!
-** view?
-
 - Solução: Monoids!
 
-#+begin_src haskell
+```haskell
 class Monoid a where
   mempty  :: a
   mappend :: a -> a -> a
-#+end_src
+```
 
-** view?
+view?
+=====
 
-- Para criar a instância de Applicative para `Const v a` devemos exigir que `a` seja instância de `Monoid`
+- Para criar a instância de Applicative para
+  `Const v a` devemos exigir que `a` seja
+  instância de `Monoid`
 
-#+begin_src haskell
+```haskell
 instance Monoid a => Applicative (Const a) where
   pure _ = Const mempty
   (Const f) <*> (Const v) = Const (f `mappend` v)
-#+end_src
+```
 
-** view?
+view?
+=====
 
 - Implementação de `view`
 
-#+begin_src haskell
+```haskell
 view :: Monoid a => ALens s a -> s -> a
 view ln s
   = getConst (ln Const s)
-#+end_src
+```
 
-** Exemplo
+Exemplo
+=======
 
 - Applicative lenses para endereços
 
-#+begin_src haskell
+```haskell
 address :: ALens Person Address
 address f (Person n a ad)
   = (\ ad' -> Person n a ad') <$> f ad
@@ -784,13 +810,14 @@ streetCity :: ALens Address String
 streetCity f (Address st ct cp)
   = (\ st' ct' -> Address st' ct' cp) <$>
         f st <*> f ct
-#+end_src
+```
 
-** Exemplo
+Exemplo
+=======
 
 - Modificando endereço para letras minúsculas.
 
-#+begin_src haskell
+```haskell
 Prelude> over (address . streetCity) (map toLower) pex
 Person {
   _name = "João"
@@ -800,9 +827,10 @@ Person {
       { _street = "rua a",
         _city = "nova iorque",
         _cep = "123"}}
-#+end_src
+```
 
-** Finalizando
+Finalizando
+===========
 
 - Lenses é um tópico vastíssimo!
    - Implementações apresentadas são super
@@ -810,7 +838,8 @@ Person {
    - Várias bibliotecas Haskell e em outras linguagens:
      Scala, Elm, Kotlin, Typescript, Rust, etc...
 
-** Finalizando
+Finalizando
+===========
 
 - Composição: essência do desenvolvimento de software.
    - Pequenas abstrações e formas de combiná-las.
@@ -818,6 +847,8 @@ Person {
 - Functores aplicativos são uma forma elegante de
   implementar software composicional.
 
-** Exercício
+Exercício
+==========
 
-- Crie lenses para os demais campos dos tipos `Person` e `Address`.
+- Crie lenses para os demais campos
+  dos tipos `Person` e `Address`.

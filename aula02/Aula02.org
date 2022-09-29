@@ -3,7 +3,7 @@
 #+OPTIONS: timestamp:nil
 #+PROPERTY: tangle Aula02.hs
 #+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
-#+REVEAL_THEME: white
+#+REVEAL_THEME: black
 #+REVEAL_HLEVEL: 1
 #+REVEAL_ROOT: file:///users/rodrigo/reveal.js
 
@@ -35,7 +35,7 @@ import Prelude hiding ( replicate
                       , null
                       )
 
-average vs = sum vs `div` length ns
+average vs = sum vs `div` length vs
 #+end_src
 
 ** Definindo funções
@@ -261,7 +261,7 @@ snd (_ , y) = y
 #+begin_src haskell :tangle yes :exports code :results output
 dist :: (Float, Float) -> (Float, Float) -> Float
 dist (x1,y1) (x2,y2)
-   = sqrt ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
+   = sqrt ((x1 - x2) ^ 2 + (y1 - y2) ^ 2)
 #+end_src
 
 ** Tuplas

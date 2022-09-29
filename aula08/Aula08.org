@@ -28,7 +28,7 @@ module Aula08 where
 
 ** Anteriormente...
 
-- Polimorfismo paramérico: funções funcionam de maneira uniforme para todos os tipos.
+- Polimorfismo paramétrico: funções funcionam de maneira uniforme para todos os tipos.
 
 #+begin_src haskell
 reverse :: [a] -> [a]

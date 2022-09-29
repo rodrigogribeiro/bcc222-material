@@ -162,7 +162,7 @@ sumEvens xs = sum [x | x <- xs, even x]
 - Exemplo
 
 #+begin_src haskell :tangle yes :exports code :results output
-heads :: [[a]] -> [a]
+heads :: [[[[a]]]] -> [a]
 heads xss = [x | (x : _) <- xss]  
 #+end_src
 
@@ -218,7 +218,9 @@ primes n = [x | x <- [2 .. n], isPrime x]
 primes :: Int -> [Int]
 primes n = [x | x <- [2 .. n], isPrime x]
     where
-      isPrime x = (length (factors x)) == 2
+      sizeTwo (_ : _ : []) = True
+      sizeTwo _            = False
+      isPrime x = sizeTwo (factors x)
       factors x = [ y | y <- [1 .. x]
                       , x `mod` y == 0 ]
 #+end_src
@@ -707,9 +709,8 @@ sorted (x : y : ys)
 sorted :: Ord a => [a] -> Bool
 sorted []           = True
 sorted [_]          = True
-sorted (x : y : ys) 
-     | x <= y       = sorted (y : ys)
-     | otherwise    = False
+sorted (x : y : ys)
+  = x <= y && sorted (y : ys)
 #+end_src
 
 * Implementando zip

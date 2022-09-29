@@ -3,6 +3,7 @@
 #+OPTIONS: timestamp:nil
 #+PROPERTY: tangle Aula05.hs
 #+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
+#+STARTUP: latexpreview
 #+REVEAL_THEME: white
 #+REVEAL_HLEVEL: 1
 #+REVEAL_ROOT: file:///users/rodrigo/reveal.js
@@ -38,7 +39,8 @@ import Data.Char
 
 ** Tarefa
 
-- Desenvolver uma função que dobra todo número presente em uma lista de inteiros.
+- Desenvolver uma função que dobra todo número presente
+  em uma lista de inteiros.
 
 - Como implementar essa função em Haskell?
 
@@ -83,7 +85,8 @@ doubleList (x : xs) = 2 * x : doubleList xs
 
 ** Tarefa
 
-- Definir uma função que realiza a negação de todos os elementos de uma lista de booleanos.
+- Definir uma função que realiza a negação de todos os
+  elementos de uma lista de booleanos.
 
 - Como implementar essa função em Haskell?
 
@@ -128,7 +131,8 @@ notList (x : xs) = not x : notList xs
 
 ** Padrão
 
-- As definições de =doubleList= e =notList= são muito similares.
+- As definições de =doubleList= e =notList= são
+  muito similares.
 
 #+begin_src haskell
 doubleList :: [Int] -> [Int]
@@ -142,7 +146,8 @@ notList (x : xs) = not x : notList xs
 
 ** Refatorar
 
-- Ao nos depararmos com código similar, devemos utilizar refatoração.
+- Ao nos depararmos com código similar, devemos
+  utilizar refatoração.
 
 - Extrair "o que há de comum" e reutilizar.
 
@@ -150,9 +155,10 @@ notList (x : xs) = not x : notList xs
 
 ** Casos base
 
-- Note que em ambos os casos base, retorna-se uma lista vazia.
+- Note que em ambos os casos base, retorna-se uma
+  lista vazia.
 
-#+begin_src haskell 
+#+begin_src haskell
 doubleList :: [Int] -> [Int]
 doubleList [] = []
 doubleList (x : xs) = 2 * x : doubleList xs
@@ -164,9 +170,11 @@ notList (x : xs) = not x : notList xs
 
 ** Caso recursivo
 
-- No caso recursivo ambas as funções são chamadas recursivamente sobre a cauda.
+- No caso recursivo ambas as funções são chamadas
+  recursivamente sobre a cauda.
 
-- Porém, cada uma aplica uma função diferente sobre a cabeça da lista...
+- Porém, cada uma aplica uma função diferente sobre
+  a cabeça da lista...
 
 #+begin_src haskell
 doubleList (x : xs) = 2 * x : doubleList xs
@@ -189,9 +197,11 @@ map (x : xs) = ? : map xs
 
 ** Caso recursivo
 
-- Como as funções =doubleList= e =notList= usam funções diferentes
+- Como as funções =doubleList= e =notList= usam
+  funções diferentes
 - Podemos implementá-las usando a função =map= se ...
-  - Passarmos como parâmetro a função a ser aplicada a cada elemento da lista.
+  - Passarmos como parâmetro a função a ser aplicada
+    a cada elemento da lista.
 
 ** Função ~map~
 
@@ -220,13 +230,15 @@ notList xs = map not xs
 
 ** Recapitulando
 
-- A função =map= expressa o padrão de computação de aplicar uma função sobre cada elemento de uma lista.
+- A função =map= expressa o padrão de computação de
+  aplicar uma função sobre cada elemento de uma lista.
 
 * Função ~filter~
 
 ** Tarefa
 
-- Definir uma uma função que, a partir de uma string, retorna todos os caracteres minúsculos nela contidos.
+- Definir uma uma função que, a partir de uma string,
+  retorna todos os caracteres minúsculos nela contidos.
 
 - Como definir essa função em Haskell?
 
@@ -274,7 +286,8 @@ lowers (x : xs)
 
 ** Tarefa
 
-- Implementar uma função que retorne todos os números pares presentes em uma lista de inteiros.
+- Implementar uma função que retorne todos os
+  números pares presentes em uma lista de inteiros.
 
 ** Função evens
 
@@ -336,7 +349,8 @@ evens (x : xs)
 
 ** Caso base
 
-- Ambas as funções retornam a lista vazia, quando sua entrada também é a lista vazia.
+- Ambas as funções retornam a lista vazia, quando sua
+  entrada também é a lista vazia.
 
 #+begin_src haskell
 lowers [] = []
@@ -352,7 +366,9 @@ evens (x : xs)
 
 ** Caso recursivo
 
-- Inclui-se a cabeça da lista no resultado caso ela satisfaça a propriedade em questão: ser par ou ser uma letra minúscula.
+- Inclui-se a cabeça da lista no resultado caso ela
+  satisfaça a propriedade em questão: ser par ou ser
+  uma letra minúscula.
 
 #+begin_src haskell
 lowers [] = []
@@ -368,7 +384,9 @@ evens (x : xs)
 
 ** Generalizando
 
-- Como no caso de =map=, a função que generaliza =lowers= e =evens= também deve receber uma função (a condição de teste) como parâmetro.
+- Como no caso de =map=, a função que generaliza
+  =lowers= e =evens= também deve receber uma função
+  (a condição de teste) como parâmetro.
 
 #+begin_src haskell :tangle yes :export code :results output
 filter :: (a -> Bool) -> [a] -> [a]
@@ -392,7 +410,8 @@ evens xs = filter even xs
 
 ** Funções Anônimas
 
-- Haskell permite definirmos funções sem atribuir a elas um nome.
+- Haskell permite definirmos funções sem atribuir
+  a elas um nome.
 
 #+begin_src haskell
 \ arguments -> code
@@ -411,7 +430,9 @@ doubleList xs = map (\ x -> 2 * x) xs
 
 - A expressão =\ x -> 2 * x= é uma função anônima.
      - O símbolo =\= representa a letra grega \(\lambda\).
-- Nota histórica: A fundamentação teórica das linguagens funcionais é chamada de \(\lambda\)-cálculo e foi criada por volta de 1930 por Alonzo Church.
+- Nota histórica: A fundamentação teórica das
+  linguagens funcionais é chamada de \(\lambda\)-cálculo e
+  foi criada por volta de 1930 por Alonzo Church.
 
 ** Funções Anônimas
 
@@ -444,7 +465,8 @@ double = \ x -> 2 * x
 
 ** Retornando funções
 
-- A função =flip= muda a ordem dos argumentos de uma função fornecida como argumento.
+- A função =flip= muda a ordem dos argumentos de uma
+  função fornecida como argumento.
 
 #+begin_src haskell
 flip :: (a -> b -> c) -> (b -> a -> c)
@@ -453,7 +475,8 @@ flip f = _
 
 ** Retornando funções
 
-- A função =flip= muda a ordem dos argumentos de uma função fornecida como argumento.
+- A função =flip= muda a ordem dos argumentos de uma
+  função fornecida como argumento.
   - Cria uma função a partir de outra
 
 #+begin_src haskell
@@ -474,7 +497,9 @@ map :: (a -> b) -> ([a] -> [b])
 
 ** Funções Curried
 
-- Uma função de dois argumentos é, na verdade, uma função de um argumento que retorna outra função de um argumento.
+- Uma função de dois argumentos é, na verdade, uma
+  função de um argumento que retorna outra função de
+  um argumento.
 
 ** Funções Curried
 
@@ -542,8 +567,9 @@ doubleList' = map (\ x -> 2 * x)
 
 ** Aplicação parcial
 
-- Outra possibilidade de aplicação parcial é a de operadores.
-    
+- Outra possibilidade de aplicação parcial é a de
+  operadores.
+
 #+begin_src haskell
 (x #) = \ y -> x # y
 (# y) = \ x -> x # y
@@ -598,7 +624,8 @@ filterNot p = filter (not . p)
 ** Composição
 
 - Exemplo
-  - Desenvolver a maior das médias de uma lista de listas de números
+  - Desenvolver uma função para calcular a maior das
+    médias de uma lista de listas de números
 
 #+begin_src haskell
 maxAverage :: [[Float]] -> Float
@@ -638,17 +665,6 @@ averageList = map average
 #+begin_src haskell :tangle yes :exports code :results output
 maxAverage :: [[Float]] -> Float
 maxAverage = maximum . averageList . removeNull  
-#+end_src
-
-** Composição
-
-- Função =maxAverage=: escrita em /point-free/ style.
-
-#+begin_src haskell 
-maxAverage :: [[Float]] -> Float
-maxAverage = maximum . map average . filter (not . null)
-  where
-    average xs = sum xs / fromIntegral (length xs)
 #+end_src
 
 * Exercícios

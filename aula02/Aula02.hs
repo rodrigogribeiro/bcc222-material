@@ -3,7 +3,7 @@ import Prelude hiding ( replicate
                       , null
                       )
 
-average vs = sum vs `div` length ns
+average vs = sum vs `div` length vs
 
 add1 :: Int -> Int
 add1 x = x + 1
@@ -16,7 +16,8 @@ sum3 x y z = x + y + z
 
 dist :: (Float, Float) -> (Float, Float) -> Float
 dist (x1,y1) (x2,y2)
-   = sqrt ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
+   = sqrt ((x1 - x2) ^ 2 +
+           (y1 - y2) * (y1 - y2))
 
 abs1 :: Int -> Int
 abs1 n = if n < 0 then (- 1) * n else n
@@ -62,8 +63,17 @@ e = 2.718
 {-
  Definindo uma lista vazia
 -}
+null :: [a] -> Bool
+null []      = True
+null (_ : _) = False
+
 empty :: [a]
 empty = []
+
+atPos :: [a] -> Int -> a
+atPos []       _ = error "lista vazia"
+atPos (h : _)  0 = h
+atPos (_ : xs) n = atPos xs (n - 1)
 
 fac :: Int -> Int
 fac 0 = 1
@@ -83,9 +93,6 @@ conj1 :: Bool -> Bool -> Bool
 conj1 True  v = v
 conj1 False _ = False
 
-null :: [a] -> Bool
-null []      = True
-null (_ : _) = False
 
 trim :: String -> String
 trim (' '  : s) = trim s

@@ -18,7 +18,7 @@
 - Entender como construir aplicações usando o Haskell Stack
   - Entender o mecanismo de módulos, imports e exports.
   - Configurar dependências de um projeto
-
+ 
 ** Objetivos
     
 - Discussão sobre boas práticas.
@@ -317,7 +317,7 @@ All 1 tests passed (0.00s)
 ** Testes
 
 - Qual propriedade especifica a correção do tipo ~Name~?
-  - Nomes devem iniciar com letra minúscula.
+  - Nomes devem iniciar com letra maiúscula.
 
 #+begin_src haskell :tangle yes :exports code :result output
 startsWithUpper :: String -> Bool

@@ -34,13 +34,15 @@ implies :: Bool -> Bool -> Bool
 implies x y = not x || y
 
 nameCorrectFixed :: String -> Bool
-nameCorrectFixed s = (all isLetter s) `implies` b
+nameCorrectFixed s = (all isLetter' s) `implies` b
    where
      b  = startsWithUpper s'
      s' = render (mkName s)
+     isLetter' c = let c' = toLower c in
+                   ord 'a' <= ord c' && ord c' <= ord 'z'
 
 sort1 :: [Int] -> [Int]
-sort1 []       = []
+sort1 []       0= []
 sort1 (x : xs) = insert1 x xs
 
 insert1 :: Int -> [Int] -> [Int]

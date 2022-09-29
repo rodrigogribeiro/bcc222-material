@@ -1,0 +1,552 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+PROPERTY: tangle Aula14.hs
+#+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+
+#+Title: Introdução às Mônadas
+#+Author: Programação Funcional
+
+* Objetivos
+
+** Objetivos
+
+- Apresentar a abstração de mônada e como essa pode ser utilizada para o controle de efeitos colaterais em código.
+
+** Setup
+
+#+begin_src haskell :tangle yes :exports code
+module Aula14 where
+
+import Control.Monad
+import Control.Monad.Fail
+#+end_src
+
+* Expressões
+
+** Expressões
+
+- Voltemos ao exemplo de expressões aritméticas.
+
+#+begin_src haskell :tangle yes :exports code
+data Exp
+   = Const Int
+   | Exp :+: Exp
+   | Exp :*: Exp
+   deriving (Eq, Ord, Show)
+#+end_src
+
+** Expressões
+
+- Implementar o interpretador é imediato.
+
+#+begin_src haskell :tangle yes :exports code
+eval :: Exp -> Int
+eval (Const n)
+   = n
+eval (e :+: e')
+   = eval e + eval e'
+eval (e :*: e')
+   = eval e * eval e'
+#+end_src
+
+** Expressões
+
+- Tanto o tipo de expressões, quanto seu interpretador são definidos sem dificuldade.
+
+- Problema: incluir uma operação de divisão.
+
+* Divisão
+
+** Divisão
+
+- Incluindo a operação de divisão
+
+#+begin_src haskell :tangle yes :exports code
+data Exp1
+  = Const1 Int
+  | Exp1 :++: Exp1
+  | Exp1 :**: Exp1
+  | Exp1 :/: Exp1
+  deriving (Eq, Ord, Show)
+#+end_src
+
+** Divisão
+
+- Possibilidade de divisão por zero.
+
+- Temos que propagar esse erro por todo o código do intepretador.
+
+- Representaremos erros usando o tipo Maybe
+
+** Divisão
+
+- Codificando o interpretador
+  - Constantes e adição
+
+#+begin_src haskell :tangle yes :exports code
+eval1 :: Exp1 -> Maybe Int
+eval1 (Const1 n)
+   = Just n
+eval1 (e :++: e')
+  = case eval1 e of
+      Just n ->
+        case eval1 e' of
+          Just m -> Just (n + m)
+          Nothing -> Nothing
+      Nothing -> Nothing
+#+end_src
+
+
+** Divisão
+
+- Multiplicação
+
+#+begin_src haskell :tangle yes :exports code
+eval1 (e :**: e')
+  = case eval1 e of
+      Just n ->
+        case eval1 e' of
+          Just m -> Just (n * m)
+          Nothing -> Nothing
+      Nothing -> Nothing
+#+end_src
+
+** Divisão
+
+- Divisão: lançamento da exceção no caso de divisão por 0.
+
+#+begin_src haskell :tangle yes :exports code
+eval1 (e :/: e')
+  = case eval1 e of
+      Just n ->
+        case eval1 e' of
+          Just m -> if m == 0 then Nothing
+                    else Just (n `div` m)
+          Nothing -> Nothing
+      Nothing -> Nothing
+#+end_src
+
+** Divisão
+
+- Excesso de repetição de casamento de padrão sobre o tipo Maybe.
+
+- Solução: Criar uma função para abstrair esse casamento.
+
+** Divisão
+
+- Abstraindo o casamento de padrão sobre Maybe
+
+#+begin_src haskell :tangle yes :exports code
+(>>?) :: Maybe a -> (a -> Maybe b) -> Maybe b
+(Just v) >>? f = f v
+Nothing  >>? _ = Nothing
+#+end_src
+
+** Divisão
+
+- Usando a função anterior, temos a seguinte nova versão do interpretador.
+
+#+begin_src haskell :tangle yes :exports code
+eval2 :: Exp1 -> Maybe Int
+eval2 (Const1 n) = Just n
+eval2 (e :++: e') =
+   eval2 e >>? (\ n ->
+      eval2 e' >>? \m -> Just (n + m))
+#+end_src
+
+** Divisão
+
+- Continuando...
+
+#+begin_src haskell :tangle yes :exports code
+eval2 (e :**: e') =
+   eval2 e >>? (\ n ->
+       eval2 e' >>? \m -> Just (n * m))
+eval2 (e :/: e') =
+   eval2 e >>? (\ n ->
+       eval2 e' >>? \m -> if m == 0
+                          then Nothing
+                          else Just (n `div` m))
+#+end_src
+
+** Divisão
+
+- Note que a função >>? impõe uma ordem de execução sobre as ações a serem feitas por uma função.
+
+- Isso não é verdade, em geral, em código Haskell.
+
+- A função >>? é uma das que define, em Haskell, o conceito de mônada
+
+* Mônadas
+
+** Mônadas
+
+- Definindo o conceito de mônada em uma classe de tipos.
+
+#+begin_src haskell
+class Applicative m => Monad m where
+   return :: a -> m a
+   (>>=)  :: m a -> (a -> m b) -> m b
+#+end_src
+
+* Mônada Maybe
+
+** Mônada Maybe
+
+- Maybe é uma mônada
+
+#+begin_src haskell
+instance Monad Maybe where
+   return = Just
+   Nothing >>= _ = Nothing
+   (Just x) >>= f = f x
+#+end_src
+
+** Mônada Maybe
+
+- Usada para computações parciais: situações de erro.
+
+- Uso de monadas permite que tais "erros" fiquem confinados em funções que envolvem valores deste tipo (Maybe).
+
+** Mônada Maybe
+
+- Utilizando as funções das classes Monad e MonadFail.
+
+#+begin_src haskell :tangle yes :exports code
+eval3 :: (Monad m, MonadFail m) => Exp1 -> m Int
+eval3 (Const1 n) = return n
+eval3 (e :++: e')
+  = eval3 e >>= \ n ->
+    eval3 e' >>= \ m ->
+    return (n + m)
+#+end_src
+
+** Mônada Maybe
+
+- Continuando
+
+#+begin_src haskell :tangle yes :exports code
+eval3 (e :**: e')
+  = eval3 e >>= \ n ->
+    eval3 e' >>= \ m ->
+    return (n * m)
+eval3 (e :/: e')
+  = eval3 e >>= \ n ->
+    eval3 e' >>= \ m ->
+    if m == 0 then fail "Division by zero"
+      else return (n `div` m)
+#+end_src
+
+** Mônada Maybe
+
+- *do* Notation pode ser usada sobre qualquer tipo que implementa a classe Monad.
+
+- Exemplos: IO, Maybe, [a], etc...
+
+** Mônada Maybe
+
+- Interpretador usando do notation.
+
+#+begin_src haskell :tangle yes :exports code
+eval4 :: (Monad m, MonadFail m) => Exp1 -> m Int
+eval4 (Const1 n) = return n
+eval4 (e :++: e')
+  = do
+       n <- eval4 e
+       m <- eval4 e'
+       return (n + m)
+#+end_src
+
+** Mônada Maybe
+
+- Continuação
+
+#+begin_src haskell :tangle yes :exports code
+eval4 (e :**: e')
+  = do
+       n <- eval4 e
+       m <- eval4 e'
+       return (n * m)
+eval4 (e :/: e')
+  = do
+       n <- eval4 e
+       m <- eval4 e'
+       if m == 0 then fail "Division by zero"
+         else return (n `div` m)
+#+end_src
+
+* Mônada de lista
+
+** Mônada de lista
+
+- Permite a definição de computações que retornam uma lista de resultados (não-determinismo).
+
+** Mônada de lista
+
+#+begin_src haskell
+instance Monad [] where
+   return x = [x]
+   xs >>= f = concatMap f xs
+#+end_src
+
+** Mônada de lista
+
+- =guard= é uma função útil para finalizar a busca exaustiva.
+
+#+begin_src haskell
+guard :: Monad m => Bool -> m ()
+guard True  = return ()
+guard False = fail "failure"
+#+end_src
+
+** Mônada de lista
+
+- Triplas pitagóricas usando a mônada de lista.
+
+#+begin_src haskell :tangle yes :exports code
+triples :: Int -> [(Int,Int,Int)]
+triples n
+  = do
+       x <- [1..n]
+       y <- [1..n]
+       z <- [1..n]
+       guard (x^2 == y^2 + z^2)
+       return (x,y,z)
+#+end_src
+
+** Mônada de lista
+
+- Exemplo: resolver o seguinte puzzle:
+  - Cada letra representa um dígito. Palavras números.
+  - Quais os números sendo somados?
+
+#+begin_src text
+   SEND
+++ MORE
+  =====
+  MONEY
+#+end_src
+
+** Mônada de lista
+
+- Para resolver esse problema, vamos primeiro definir uma lista de dígitos
+
+#+begin_src haskell :tangle yes :exports code
+digits :: [Int]
+digits = [0..9]
+#+end_src
+
+** Mônada de lista
+
+- Convertendo uma lista de dígitos em um inteiro
+
+#+begin_src haskell :tangle yes :exports code
+toNumber :: [Int] -> Int
+toNumber = foldl (\ ac d -> ac * 10 + d) 0
+#+end_src
+
+** Mônada de lista
+
+- Removendo elementos da segunda lista que estão na primeira lista.
+
+#+begin_src haskell :tangle yes :exports code
+remove :: Eq a => [a] -> [a] -> [a]
+remove rs ls = foldl remove' ls rs
+      where
+        remove' ls x = filter (/= x) ls
+#+end_src
+
+** Mônada de lista
+
+- Resolvendo o puzzle.
+
+#+begin_src haskell :tangle yes :exports code
+solutions :: [(Int,Int,Int)]
+solutions = do
+   s <- remove [0] digits
+   e <- remove [s] digits
+   n <- remove [s,e] digits
+   d <- remove [s,e,n] digits
+   let send = toNumber [s, e, n, d]
+   m <- remove [0,s,e,n,d] digits
+   o <- remove [s,e,n,d,m] digits
+   r <- remove [s,e,n,d,m,o] digits
+   let more = toNumber [m, o, r, e]
+   y <- remove [s,e,n,d,m,o,r] digits
+   let money = toNumber [m,o,n,e,y]
+   guard $ send + more == money
+   return (send, more, money)
+#+end_src
+
+* Mônada de estado
+
+** Mônada de estado
+
+- Considere o seguinte tipo de árvore binária.
+  
+#+begin_src haskell :tangle yes :exports code
+data Tree a
+  = Leaf a
+  | Node (Tree a) (Tree a)
+  deriving (Eq, Ord, Show)
+#+end_src
+
+- Como atribuir um inteiro único para cada folha?
+
+** Mônada de estado
+
+- Exemplo: A partir da árvore t1, produzir t2.
+
+#+begin_src haskell :tangle yes :exports code
+t1 :: Tree Char
+t1 =  Node (Node (Leaf 'a') (Leaf 'b'))
+           (Leaf 'c')
+
+t2 :: Tree (Char, Int)
+t2 = Node (Node (Leaf ('a',0)) (Leaf ('b',1)))
+          (Leaf ('c',2))
+#+end_src
+
+** Mônada de estado
+
+- Solução: uso de um acumulador.
+  - A cada chamada, retornamos a árvore modificada e o novo valor do acumulador.
+
+#+begin_src haskell :tangle yes :exports code
+label :: Tree a -> Tree (a,Int)
+label = fst . flip labelAcc 0
+   where
+     labelAcc (Leaf x) n
+        = (Leaf (x,n) , n + 1)
+     labelAcc (Node tl tr) n
+        = (Node tl' tr' , n2)
+          where
+            (tl', n1) = labelAcc tl n
+            (tr', n2) = labelAcc tr n1
+#+end_src
+
+** Mônada de estado
+
+- A função labelAcc possui tipo
+
+#+begin_src haskell
+labelAcc :: Tree a -> Int -> (Tree a, Int)
+#+end_src
+
+- Intuitivamente, essa função recebe um "estado" e retorna um valor juntamente com o estado possivelmente atualizado.
+
+** Mônada de estado
+
+- Generalizando esse conceito de estado, obtemos:
+
+#+begin_src haskell :tangle yes :exports code
+newtype State s a
+   = State { runState :: s -> (a, s) }
+#+end_src
+
+- Variável s: estado armazenado.
+- Variável a: resultado da computação.
+
+** Mônada de estado
+
+- Modificar o valor do estado:
+
+#+begin_src haskell :tangle yes :exports code
+put :: s -> State s ()
+put s = State (\ _ -> ((), s))
+#+end_src
+
+** Mônada de estado
+
+- Obter o valor atual do estado.
+
+#+begin_src haskell :tangle yes :exports code
+get :: State s s
+get = State (\ s -> (s, s))
+#+end_src
+
+** Mônada de estado
+
+- State é um functor.
+
+#+begin_src haskell :tangle yes :exports code
+instance Functor (State s) where
+   fmap f (State g)
+     = State (\ s ->
+          let (v, s') = g s
+          in (f v, s'))
+#+end_src
+
+** Mônada de estado
+
+- State é um applicative functor
+
+#+begin_src haskell :tangle yes :exports code
+instance Applicative (State s) where
+   pure v = State (\ s -> (v, s))
+   (State f) <*> (State g)
+     = State (\s -> let (h, s1) = f s
+                        (v, s2) = g s1
+                    in (h v, s2))
+#+end_src
+
+** Mônada de estado
+
+- State é uma mônada
+
+#+begin_src haskell :tangle yes :exports code
+instance Monad (State s) where
+   return = pure
+   (State m) >>= f
+      = State (\ s -> let (v, s') = m s
+                      in runState (f v) s')
+
+instance MonadFail (State s) where
+   fail s = error s
+#+end_src
+
+** Mônada de estado
+
+- Para implementar a operação de modificar a árvore, vamos utilizar como estado um número inteiro.
+
+** Mônada de estado
+
+- Gerando um novo número inteiro
+
+#+begin_src haskell :tangle yes :exports code
+fresh :: State Int Int
+fresh
+   = do
+       n <- get
+       put (n + 1)
+       return n
+#+end_src
+
+** Mônada de estado
+
+- Reimplementando label
+
+#+begin_src haskell :tangle yes :exports code
+lbl :: Tree a -> Tree (a, Int)
+lbl t = fst (runState (mk t) 0)
+  where
+    mk (Leaf v)
+      = do
+          n <- fresh
+          return (Leaf (v, n))
+    mk (Node tl tr)
+      = do
+          tl' <- mk tl
+          tr' <- mk tr
+          return (Node tl' tr')
+#+end_src
+
+* Exercícios
+
+** Exercícios
+
+- Use a mônada de estado para implementar os algoritmos de ordenação merge sort e insertion sort de forma a contar o número de comparações realizadas. Utilize o QuickCheck para gerar listas de inteiros aleatoriamente e testar se o número de comparações está de acordo com os resultados teóricos esperados.

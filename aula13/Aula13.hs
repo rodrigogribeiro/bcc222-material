@@ -56,9 +56,9 @@ infixr 4 <|>
 
 instance Applicative (Parser s) where
    pure = succeed
-   (Parser p) <*> (Parser q)
-     = Parser (\ inp -> [(f x, xs) | (f, ys) <- p inp
-                                   , (x, xs) <- q ys])
+   p <*> q
+     = Parser (\ inp -> [(f x, xs) | (f, ys) <- runParser p inp
+                                   , (x, xs) <- runParser q ys])
 
 ex1 :: Parser Char String
 ex1 = token "ab" <|> token "ba"
@@ -90,7 +90,7 @@ many1 :: Parser s a -> Parser s [a]
 many1 p = (:) <$> p <*> many p
 
 natural :: Parser Char Int
-natural = foldl f 0 <$> many digit
+natural = foldl f 0 <$> greedy digit
      where
        f ac d = ac * 10 + d
 
@@ -153,7 +153,7 @@ chainr :: Parser s a ->             -- expressão
           Parser s (a -> a -> a) -> -- operador
           Parser s a
 chainr pe po
-   = h <$> many (j <$> pe <*> po) <*> pe
+   = h <$> greedy (j <$> pe <*> po) <*> pe
      where
        j x op = op x
        h fs x = foldr ($) x fs
@@ -172,6 +172,11 @@ data Exp
    | Exp :+: Exp
    | Exp :*: Exp
    deriving (Eq, Ord, Show)
+
+instance Num Exp where
+  fromInteger = Const . fromInteger
+  (+) = (:+:)
+  (*) = (:*:)
 
 factorParser :: Parser Char Exp
 factorParser

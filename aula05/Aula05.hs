@@ -4,7 +4,10 @@ import Prelude hiding ( map
                       , filter
                       , foldr
                       , foldl
+                      , flip
+                      , (.)
                       )
+import Data.Char
 
 map :: (a -> b) -> [a] -> [b]
 map _ []       = []
@@ -29,3 +32,24 @@ lowers xs = filter isLower xs
 
 evens :: [Int] -> [Int]
 evens xs = filter even xs
+
+multThree :: Int -> Int -> Int -> Int
+multThree x y z = x * y * z
+
+doubleList' = map (\ x -> 2 * x)
+
+greaterThan5 = filter (> 5)
+
+(.) :: (b -> c) -> (a -> b) -> a -> c
+g . f = \ x -> g (f x)
+
+removeNull :: [[a]] -> [[a]]
+removeNull = filter (not . null)
+
+averageList :: [[Float]] -> [Float]
+averageList = map average
+    where
+       average xs = sum xs / fromIntegral (length xs)
+
+maxAverage :: [[Float]] -> Float
+maxAverage = maximum . averageList . removeNull

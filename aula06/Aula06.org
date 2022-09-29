@@ -3,6 +3,7 @@
 #+OPTIONS: timestamp:nil
 #+PROPERTY: tangle Aula06.hs
 #+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
+#+STARTUP: latexpreview
 #+REVEAL_THEME: white
 #+REVEAL_HLEVEL: 1
 #+REVEAL_ROOT: file:///users/rodrigo/reveal.js
@@ -58,7 +59,8 @@ and (x : xs) = x && and xs
 
 - Funções anteriores exibem o seguinte padrão.
   - Caso de lista vazia: retornam um valor padrão.
-  - Lista não vazia: utilizam uma função para combinar a cabeça com o resultado da chamada recursiva sobre a cauda.
+  - Lista não vazia: utilizam uma função para combinar a
+    cabeça com o resultado da chamada recursiva sobre a cauda.
 
 ** Padrão
 
@@ -266,7 +268,7 @@ filter p = foldr step []
 #+begin_src haskell
 > foldr (-) 0 [1,2,3]
 2
-> foldr (-) 0 [1,2,3]
+> foldl (-) 0 [1,2,3]
 -6
 #+end_src
  
@@ -278,7 +280,8 @@ filter p = foldr step []
 foldr f v xs = foldl f v xs
 #+end_src
 
-- Será igual se =f= e =v= formam uma estrutura matemática conhecida como /monóide/.
+- Será igual se =f= e =v= formam uma estrutura
+  matemática conhecida como /monóide/.
 
 ** Monóide
 
@@ -291,13 +294,15 @@ foldr f v xs = foldl f v xs
 
 - A estrutura de um monóide deve atender as seguintes propriedades:
   - \(x \circ (y\circ z) = (x \circ y) \circ z\)
-  - x \circ \epsilon = \epsilon \circ x = x
+  - \(x \circ \epsilon = \epsilon \circ x = x\)
 
 ** Monóide
 
-- Posteriormente no curso, veremos como monóides são uma abstração importante para desenvolvimento de software.
+- Posteriormente no curso, veremos como monóides são uma
+  abstração importante para desenvolvimento de software.
 
-- Além disso, provaremos a equivalência de =foldr= e =foldl= quando aplicadas a monóides.
+- Além disso, provaremos a equivalência de =foldr= e =foldl=
+  quando aplicadas a monóides.
 
 * Concluindo
 
@@ -309,6 +314,7 @@ foldr f v xs = foldl f v xs
   
 
 * Exercícios
+
 
 ** Exercício
 

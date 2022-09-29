@@ -24,6 +24,12 @@ directionName South = "S"
 directionName East  = "E"
 directionName West  = "W"
 
+move :: (Int, Int) -> Direction -> (Int, Int)
+move (x,y) North = (x, y + 1)
+move (x,y) South = (x, y - 1)
+move (x,y) East  = (x + 1, y)
+move (x,y) West  = (x - 1, y)
+
 data Point = Point Float Float
 
 norm :: Point -> Float
