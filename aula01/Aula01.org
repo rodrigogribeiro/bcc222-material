@@ -6,7 +6,7 @@
 #+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
 #+REVEAL_THEME: white
 #+REVEAL_HLEVEL: 1
-#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+#+REVEAL_ROOT: file:///home/rodrigo/reveal.js
 
 #+Title: Apresentação da disciplina
 #+Author: Programação Funcional
@@ -113,6 +113,7 @@
 - Facebook (software anti-spam escrito em Haskell)
 - Nubank usa /Clojure/ para o desenvolvimento de seus produtos.
 - Frameworks Javascript são implementados usando técnicas de programação funcional.
+- Empresas de desenvolvimento de contratos inteligentes e aplicações Web 3.0
 
 * Ementa
 
@@ -136,8 +137,6 @@
 
 - [[http://book.realworldhaskell.org/read/][Real world Haskell]]
 
-- [[https://plfa.github.io/][Programming languages foundations in Agda]]
-
 ** Materiais adicionais
 
 - Slides e código exemplo serão disponibilizados no seguinte [[https://github.com/rodrigogribeiro/bcc222-material][repositório]].
@@ -146,11 +145,9 @@
 
 ** Software necessário
 
-- [[https://docs.haskellstack.org/en/stable/README/][Haskell tool stack]]
+- [[https://www.haskell.org/ghcup/][Gerenciador de instalações GHCUp]]
 
-- [[https://wiki.portal.chalmers.se/agda/pmwiki.php][Agda programming language]]
-
-- Editor de texto
+- Editor de texto compatível com Haskell
   - VSCode
   - Emacs
 
@@ -193,15 +190,7 @@
 
 ** Atendimento
 
-- O atendimento será feito utilizando a ferramenta [[https://zulip.com/][Zulip]]. Será criado um
-  workspace para a disciplina e todos os alunos matriculados serão adicionados.
-
-- Utilize o Zulip para o envio de dúvidas sobre o conteúdo da disciplina
-
-** Atendimento
-
-- Atendimento usando Google Meet será feito às quartas-feiras de 16:00h às 17:00h
-  utilizando o seguinte link: meet.google.com/sed-xfis-mcw
+- Segunda-feira: 15:30-18:00h
 
 ** Finalizando
 
@@ -367,11 +356,12 @@ readFile :: FilePath -> IO String
    
 * Executando
 
-** Haskell stack
+** Compilador GHC
 
-- Vamos utilizar o gerenciador de projetos Haskell stack.
+- Use o GHCup para instalar a versão recomendada para o compilador GHC.
 
-- Automaticamente instala bibliotecas e a versão adequada do compilador GHC.
+- Inicialmente, vamos usar o interpretador =ghci=.
+
 
 ** Interpretador
 
@@ -415,7 +405,9 @@ readFile :: FilePath -> IO String
 
 ** Exercícios
 
-- Instale o Haskell stack e configure um editor de texto de sua preferência.
+- Instale o GHCUp e o use para instalar o compilador GHC versão *recommended*.
+
+- Configure um editor de texto de sua preferência.
 
 - Execute algumas das funções apresentadas nesta aula.
 
