@@ -274,7 +274,7 @@
 
 #+begin_src haskell :tangle yes :exports code :results output
   fact :: Int -> Int
-  fact n = n * factorial (n - 1)
+  fact n = n * fact (n - 1)
   fact 0 = 1
 #+end_src
 
