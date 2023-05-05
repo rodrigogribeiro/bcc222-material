@@ -42,7 +42,7 @@ nameCorrectFixed s = (all isLetter' s) `implies` b
                    ord 'a' <= ord c' && ord c' <= ord 'z'
 
 sort1 :: [Int] -> [Int]
-sort1 []       0= []
+sort1 []       = []
 sort1 (x : xs) = insert1 x xs
 
 insert1 :: Int -> [Int] -> [Int]
