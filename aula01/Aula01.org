@@ -6,7 +6,7 @@
 #+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
 #+REVEAL_THEME: white
 #+REVEAL_HLEVEL: 1
-#+REVEAL_ROOT: file:///home/rodrigo/reveal.js
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
 
 #+Title: Apresentação da disciplina
 #+Author: Programação Funcional

@@ -6,7 +6,7 @@
 #+STARTUP: latexpreview
 #+REVEAL_THEME: white
 #+REVEAL_HLEVEL: 1
-#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
 
 #+Title: Funções de ordem superior
 #+Author:  Programação Funcional
