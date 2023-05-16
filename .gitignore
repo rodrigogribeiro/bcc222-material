@@ -27,3 +27,4 @@ MAlonzo/**
 *.html
 *.pdf
 *.tex
+.vagrant
