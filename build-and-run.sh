@@ -23,13 +23,21 @@ sudo -u vagrant emacs --batch -l /home/vagrant/.emacs -eval '(load-library "ox-r
 # Define function to export slides
 echo "(defun export-slides (file) (find-file file) (org-reveal-export-to-html))" >> /home/vagrant/export.el
 
-# Create reveal presentation
+# Loop through directories and export org files as reveal.js slides
 for dir in /vagrant/aula* /vagrant/extra*; do
   if [ -d "$dir" ]; then
     for file in "$dir"/*.org; do
       if [ -f "$file" ]; then
+        # Store REVEAL_ROOT in a variable
+        reveal_root=$(grep -oP '#\+REVEAL_ROOT: \K.*' "$file")
+        # Change REVEAL_ROOT to CDN URL
+        sed -i "s|$reveal_root|https://cdn.jsdelivr.net/npm/reveal.js@4.1.0/|" "$file"
+        # Export slides
         sudo -u vagrant emacs --batch -l /home/vagrant/.emacs -l /home/vagrant/export.el --eval "(export-slides \"$file\")" 
+        # Move slides to slides directory
         mv "${file%.org}.html" /vagrant/slides/
+        # Restore REVEAL_ROOT to original value
+        sed -i "s|https://cdn.jsdelivr.net/npm/reveal.js@4.1.0/|$reveal_root|" "$file"
       fi
     done
   fi
