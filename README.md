@@ -135,9 +135,6 @@ done
 
 </details>
 
-
-
-
 - Em uma maquina com vagrant instalado, execute:
 
 ``` bash
