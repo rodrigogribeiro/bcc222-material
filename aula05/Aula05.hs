@@ -9,6 +9,32 @@ import Prelude hiding ( map
                       )
 import Data.Char
 
+power :: Int -> Int -> Int
+power _ 0 = 1
+power n m = n * power n (m - 1)
+
+powerTwo :: Int -> Int
+powerTwo n = power 2 n
+
+position :: Eq a => a -> [a] -> Maybe Int
+position x xs = aux x xs 0
+  where
+    aux _ [] _ = Nothing
+    aux x (y : ys) ac
+      | x == y = Just ac
+      | otherwise = aux x ys (ac + 1)
+
+indexOf :: Int -> [Int] -> Int
+indexOf x xs = index' x xs 0
+  where
+    index' _ [] _ = -1
+    index' x (y : ys) ac
+      | x == y = ac
+      | otherwise = index' x ys (ac + 1)
+
+quad :: Int -> Int
+quad b = power b 2
+
 map :: (a -> b) -> [a] -> [b]
 map _ []       = []
 map f (x : xs) = f x : map f xs

@@ -1,4 +1,7 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, GADTs #-}
+{-# LANGUAGE TypeSynonymInstances,
+             FlexibleInstances,
+             GADTs,
+             InstanceSigs #-}
 module Parsing where
 
 import Data.Char
@@ -28,6 +31,7 @@ digitChar :: Parser Char Char
 digitChar = sat isDigit
 
 instance Functor (Parser s) where
+  fmap :: (a -> b) -> Parser s a -> Parser s b
   fmap f (Parser p)
     = Parser (\ inp ->
         [(f x, xs) | (x,xs) <- p inp])
@@ -52,6 +56,7 @@ failure = Parser (\ _ -> [])
 
 instance Applicative (Parser s) where
   pure = succeed
+  (<*>) :: Parser s (a -> b) -> Parser s a -> Parser s b
   p1 <*> p2
     = Parser (\ inp ->
         [(f x, r2) | (f, r1) <- runParser p1 inp,
@@ -95,4 +100,15 @@ natural = f <$> greedy digit
     f = foldl step 0
     step b a = b * 10 + a
 
+data Identifier = Id String
+
+instance Show Identifier where
+  show (Id s) = s
+
+idParser :: Parser Char Identifier
+idParser = Id <$> p
+  where
+    p = (:) <$> letter <*> greedy alphaNum
+    letter = sat isLetter
+    alphaNum = sat isAlphaNum
 

@@ -28,3 +28,4 @@ MAlonzo/**
 *.pdf
 *.tex
 .vagrant
+*ltximg*

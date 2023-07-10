@@ -5,7 +5,7 @@
 #+PROPERTY: :header-args:haskell: :prologue ":{\n" :epilogue ":}\n"
 #+REVEAL_THEME: white
 #+REVEAL_HLEVEL: 1
-#+REVEAL_ROOT: file:///users/rodrigo/reveal.js
+#+REVEAL_ROOT: file:///home/rodrigo/reveal.js
 
 #+Title: Classes de tipos
 #+Author:  Programação Funcional
@@ -326,7 +326,7 @@ class Num a where
 
 - Sobrecarga de valores numéricos é feita pela função ~fromInteger~.
 
-- Isto é, 3 :: Int é, na verdade, fromInteger 3.
+- Isto é, 3 é, na verdade, fromInteger 3.
 
 - Isso permite a sobrecarga de valores quaisquer como números e expressões numéricas.
 
