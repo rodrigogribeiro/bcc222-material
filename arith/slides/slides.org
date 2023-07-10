@@ -1,0 +1,168 @@
+#+OPTIONS: date:nil reveal_mathjax:t toc:nil num:nil
+#+OPTIONS: tex t
+#+OPTIONS: timestamp:nil
+#+REVEAL_THEME: white
+#+REVEAL_HLEVEL: 1
+#+REVEAL_ROOT: file:///home/rodrigo/reveal.js
+
+#+Title: Estudo de caso: Expressões
+#+Author: Programação Funcional
+
+
+* Objetivos
+
+** Objetivos
+
+- Aplicar a biblioteca de parsing para um construir um compilador de expressões.
+
+- Usar testes baseados em propriedades para validar a correção do compilador.
+
+
+* Expressões
+
+** Sintaxe de expressões
+
+#+begin_src haskell 
+data Exp
+   = Const Int
+   | Exp :+: Exp
+   | Exp :*: Exp
+   deriving (Eq, Ord, Show)
+#+end_src
+
+** Interpretador
+
+#+begin_src haskell
+eval :: Exp -> Int
+eval (Const n) = n
+eval (e1 :+: e2) = eval e1 + eval e2
+eval (e1 :*: e2) = eval e1 * eval e2
+#+end_src
+
+** Geração de expressões
+
+#+begin_src haskell
+genExp :: Int -> Gen Exp
+genExp h
+  | h <= 1 = Const <$> choose (1,100)
+  | otherwise = frequency [ (20, Const <$> choose (1,100))
+                          , (40, (:+:) <$> genExp h2 <*> genExp h2)
+                          , (40, (:*:) <$> genExp h2 <*> genExp h2)
+                          ]
+     where
+       h2 = h `div` 2
+#+end_src
+
+* Máquina virtual
+
+** Sintaxe de instruções
+
+#+begin_src haskell
+data Instr
+  = ADD
+  | MUL
+  | PUSH Int
+  deriving (Eq, Ord, Show)
+#+end_src
+
+** Estado da máquina
+
+#+begin_src haskell
+type Code = [Instr]
+type Stack = [Int]
+type State = (Stack, Code)
+#+end_src
+
+** Interpretador
+
+#+begin_src haskell
+interp :: State -> Maybe State
+interp s@(_, []) = Just s
+interp (stk, (i:is))
+  = case i of
+      PUSH n -> interp (n : stk , is)
+      _      -> evalOp i stk is
+   where
+     evalOp i (v1 : v2 : stk') is
+       = if i == ADD then interp (v1 + v2 : stk' , is)
+         else interp (v1 * v2 : stk' , is)
+     evalOp _ _ _ = Nothing
+#+end_src
+
+* Correção
+
+** Definição de correção
+
+#+begin_src haskell
+compileCorrect :: Exp -> Bool
+compileCorrect e
+  = case interp start of
+      Just ((x : _), _) -> x == eval e
+      _                 -> False
+   where
+     start = initialState (compile e)
+#+end_src
+
+** Executando testes
+
+#+begin_src haskell
+main :: IO ()
+main = quickCheckWith stdArgs {maxSuccess = 1000}
+                      compileCorrect
+#+end_src
+
+** Cobertura de código
+
+#+begin_src
+$> stack test --coverage
+#+end_src
+
+** Cobertura de código
+
+- Como melhorar?
+  - Eliminar código não usado
+  - Forçar os testes a rodar todo o código.
+
+* Finalizando...
+
+** Importância de testes
+
+- Versão original da VM:
+
+#+begin_src haskell
+interp :: State -> Maybe State
+interp s@(_, []) = Just s
+interp (stk, (i:is))
+  = case i of
+      PUSH n -> interp (n : stk , is)
+      _      -> evalOp i stk is
+   where
+     evalOp i (v1 : v2 : stk') is
+       = if i == ADD then Just (v1 + v2 : stk' , is)
+         else Just (v1 * v2 : stk' , is)
+     evalOp _ _ _ = Nothing
+#+end_src
+
+
+** Importância de testes
+
+- Não fazia a chamada recursiva...
+
+- Versão correta:
+
+#+begin_src haskell
+interp :: State -> Maybe State
+interp s@(_, []) = Just s
+interp (stk, (i:is))
+  = case i of
+      PUSH n -> interp (n : stk , is)
+      _      -> evalOp i stk is
+   where
+     evalOp i (v1 : v2 : stk') is
+       = if i == ADD then interp (v1 + v2 : stk' , is)
+         else interp (v1 * v2 : stk' , is)
+     evalOp _ _ _ = Nothing
+#+end_src
+
+
+

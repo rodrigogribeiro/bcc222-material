@@ -1,0 +1,76 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.35.2.
+--
+-- see: https://github.com/sol/hpack
+
+name:           arith
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/arith#readme>
+homepage:       https://github.com/githubuser/arith#readme
+bug-reports:    https://github.com/githubuser/arith/issues
+author:         Rodrigo Ribeiro
+maintainer:     rodrigo.ribeiro@ufop.edu.br
+copyright:      2023 Rodrigo Ribeiro
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/arith
+
+library
+  exposed-modules:
+      Arith
+      Compiler
+      ParserLib
+      StackVM
+  other-modules:
+      Paths_arith
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      QuickCheck
+    , base >=4.7 && <5
+    , haskeline
+    , tasty
+    , tasty-quickcheck
+  default-language: Haskell2010
+
+executable arith-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_arith
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      QuickCheck
+    , arith
+    , base >=4.7 && <5
+    , haskeline
+    , tasty
+    , tasty-quickcheck
+  default-language: Haskell2010
+
+test-suite arith-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_arith
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      QuickCheck
+    , arith
+    , base >=4.7 && <5
+    , haskeline
+    , tasty
+    , tasty-quickcheck
+  default-language: Haskell2010
