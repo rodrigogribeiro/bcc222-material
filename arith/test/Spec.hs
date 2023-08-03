@@ -16,4 +16,4 @@ compileCorrect e
 
 
 main :: IO ()
-main = quickCheckWith stdArgs {maxSuccess = 1000} compileCorrect
+main = quickCheckWith stdArgs {maxSuccess = 10000} compileCorrect

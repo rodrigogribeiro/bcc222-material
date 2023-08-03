@@ -22,13 +22,64 @@
 
 ** Sintaxe de expressões
 
-#+begin_src haskell 
+\begin{array}{lcl}
+e & \to  & t + e \\
+  & \mid & t \\
+t & \to & f * t \\
+  & \mid & f \\
+f & \to & n \\
+  & \mid & (e)\\
+\end{array}
+
+
+** Sintaxe de expressões
+
+- Tipo de dados para representar a árvore de sintaxe de expressões.
+
+#+begin_src haskell :tangle yes :exports code
 data Exp
    = Const Int
    | Exp :+: Exp
    | Exp :*: Exp
    deriving (Eq, Ord, Show)
 #+end_src
+
+** Parsing de expressões
+
+- Regras \(f \to n \mid (e)\):
+
+#+begin_src haskell :tangle yes :exports code
+factorParser :: Parser Char Exp
+factorParser
+   =  parenthesized (expParser) <|>
+      (Const <$> natural)
+#+end_src
+
+** Parsing de expressões
+
+- Regras \(t \to f * t \mid f\):
+
+#+begin_src haskell :tangle yes :exports code
+termParser :: Parser Char Exp
+termParser
+   = chainr factorParser pmult
+     where
+       pmult = const (:*:) <$> symbol '*'
+#+end_src
+
+** Parsing de expressões
+
+- Regras \(e \to t + e \mid t\):
+
+#+begin_src haskell :tangle yes :exports code
+expParser :: Parser Char Exp
+expParser
+  = chainr termParser pplus
+    where
+      pplus = const (:+:) <$> symbol '+'
+#+end_src
+
+* Interpretador
 
 ** Interpretador
 
@@ -38,6 +89,8 @@ eval (Const n) = n
 eval (e1 :+: e2) = eval e1 + eval e2
 eval (e1 :*: e2) = eval e1 * eval e2
 #+end_src
+
+* Geração de expressões
 
 ** Geração de expressões
 
@@ -87,6 +140,19 @@ interp (stk, (i:is))
        = if i == ADD then interp (v1 + v2 : stk' , is)
          else interp (v1 * v2 : stk' , is)
      evalOp _ _ _ = Nothing
+#+end_src
+
+* Compilador
+
+** Compilador
+
+#+begin_src haskell
+compile :: Exp -> Code
+compile (Const n) = [PUSH n]
+compile (e1 :+: e2)
+  = compile e1 ++ compile e2 ++ [ADD]
+compile (e1 :*: e2)
+  = compile e1 ++ compile e2 ++ [MUL]
 #+end_src
 
 * Correção

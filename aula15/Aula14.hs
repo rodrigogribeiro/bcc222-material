@@ -158,7 +158,7 @@ t2 = Node (Node (Leaf ('a',0)) (Leaf ('b',1)))
           (Leaf ('c',2))
 
 label :: Tree a -> Tree (a,Int)
-label = fst . flip labelAcc 0
+label t = fst (labelAcc t 0)-- fst . flip labelAcc 0
    where
      labelAcc (Leaf x) n
         = (Leaf (x,n) , n + 1)
@@ -176,6 +176,12 @@ put s = State (\ _ -> ((), s))
 
 get :: State s s
 get = State (\ s -> (s, s))
+
+tick :: State Int ()
+tick = do
+  v <- get
+  put (v + 1)
+
 
 instance Functor (State s) where
    fmap f (State g)
